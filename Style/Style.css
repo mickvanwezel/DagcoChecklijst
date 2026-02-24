@@ -45,7 +45,7 @@ body {
   top: 0;
   width: 60%;
   height: 100%;
-  background: url("Images/technolab_microscoop.png") center/cover no-repeat;
+  background: url("Images/technolab_lego.jpg") center/cover no-repeat;
   clip-path: polygon(25% 0, 100% 0, 100% 100%, 0% 100%);
 }
 

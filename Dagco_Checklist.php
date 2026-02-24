@@ -16,14 +16,10 @@ $pdo = new PDO('mysql:host=localhost;dbname=technolab-dashboard', 'root', '');
   <section class="hero">
     <article class="hero-content">
       <h1>
-        Technolab-intern.nl<br>
-        Dag coördinator<br>
+        Technolab<br>
+        Dag Coördinator<br>
         Checklist
       </h1>
-      <p>
-        medemogelijk gemaakt door stagiaires.<br>
-        gebracht door toekomstkunde.
-      </p>
     </article>
     <figure class="hero-image"></figure>
   </section>
