@@ -1,67 +1,69 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background: #f0f0f0;
-    padding: 2rem;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-h1 {
-    margin-bottom: 1.5rem;
-    font-size: 1.8rem;
-    color: #333;
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 400px;
+  background: #f3f3f1;
+  overflow: hidden;
 }
 
-.dagco-lijst {
-    display: flex;
+/* Left content */
+.hero-content {
+  width: 55%;
+  padding: 80px;
+  z-index: 2;
+}
+
+.hero-content h1 {
+  font-size: 48px;
+  line-height: 1.2;
+  color: #4b2354; /* purple tone */
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.hero-content p {
+  font-size: 18px;
+  color: #6f7c4f; /* muted green */
+  line-height: 1.6;
+}
+
+/* Right image with diagonal cut */
+.hero-image {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 60%;
+  height: 100%;
+  background: url("Images/technolab_microscoop.png") center/cover no-repeat;
+  clip-path: polygon(25% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .hero {
     flex-direction: column;
-    gap: 2rem;
-    max-width: 1000px;
-    margin: 0 auto;
-}
+  }
 
-.dagco-kaart {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.1);
-    padding: 1.5rem;
-}
-
-.dagco-kaart h2 {
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-    color: #444;
-}
-
-table {
+  .hero-content {
     width: 100%;
-    border-collapse: collapse;
-}
+    padding: 40px;
+  }
 
-th, td {
-    padding: .6rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-th {
-    background: #f5f5f5;
-    font-weight: 600;
-    color: #555;
-}
-
-.status-completed {
-    background: #e6f9ee;
-}
-
-.status-in_progress {
-    background: #fff8e1;
-}
-
-.status-pending {
-    background: #fdecea;
+  .hero-image {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    clip-path: none;
+  }
 }
