@@ -1,69 +1,124 @@
+/* 💜 Global Styles */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #FFFFFF;
+    color: #333;
 }
 
+/* 🟣 Hero */
 .hero {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 400px;
-  background: #f3f3f1;
-  overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 400px;
+    background: #F8F6FA;
+    overflow: hidden;
 }
 
-/* Left content */
 .hero-content {
-  width: 55%;
-  padding: 80px;
-  z-index: 2;
+    width: 55%;
+    padding: 80px;
+    z-index: 2;
 }
 
 .hero-content h1 {
-  font-size: 48px;
-  line-height: 1.2;
-  color: #4b2354; /* purple tone */
-  margin-bottom: 20px;
-  font-weight: 700;
+    font-size: 48px;
+    line-height: 1.2;
+    color: #4B2354;
+    /* Dark Purple */
+    margin-bottom: 15px;
+    font-weight: 700;
 }
 
 .hero-content p {
-  font-size: 18px;
-  color: #6f7c4f; /* muted green */
-  line-height: 1.6;
+    font-size: 18px;
+    color: #6F7C4F;
+    /* muted green */
+    line-height: 1.6;
 }
 
-/* Right image with diagonal cut */
 .hero-image {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 60%;
-  height: 100%;
-  background: url("Images/technolab_lego.jpg") center/cover no-repeat;
-  clip-path: polygon(25% 0, 100% 0, 100% 100%, 0% 100%);
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 60%;
+    height: 100%;
+    background: url("Images/technolab_microscoop.png") center/cover no-repeat;
+    clip-path: polygon(25% 0, 100% 0, 100% 100%, 0% 100%);
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .hero {
-    flex-direction: column;
-  }
-
-  .hero-content {
-    width: 100%;
+/* 📋 Checklist Section */
+.checklist {
     padding: 40px;
-  }
+    background: #FFFFFF;
+}
 
-  .hero-image {
-    position: relative;
+.checklist h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    color: #4B2354;
+    /* Dark Purple */
+    text-align: center;
+}
+
+.checklist table {
     width: 100%;
-    height: 300px;
-    clip-path: none;
-  }
+    border-collapse: collapse;
+    font-size: 16px;
+}
+
+.checklist th,
+.checklist td {
+    padding: 12px 15px;
+    border: 1px solid #E0E0E0;
+    text-align: left;
+}
+
+.checklist th {
+    background: #7D5BA6;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.checklist tbody tr:nth-child(even) {
+    background: #E8F4E9;
+}
+
+.checklist tbody tr:hover {
+    background: #D0EADC;
+}
+
+.status-done {
+    color: #3F8E43;
+    font-weight: bold;
+}
+
+.status-pending {
+    color: #7D5BA6;
+    font-weight: bold;
+}
+
+/* 📱 Responsive */
+@media (max-width: 900px) {
+    .hero {
+        flex-direction: column;
+    }
+
+    .hero-content {
+        width: 100%;
+        padding: 40px;
+    }
+
+    .hero-image {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        clip-path: none;
+    }
 }
