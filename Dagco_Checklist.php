@@ -1,68 +1,132 @@
 <?php
+$pdo = new PDO(
+    'mysql:host=localhost;dbname=technolab-dashboard;charset=utf8mb4',
+    'root',
+    '',
+    [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+    ]
+);
 
-$pdo = new PDO('mysql:host=localhost;dbname=technolab-dashboard', 'root', '');
+
+if (isset($_POST['delete_id'])) {
+    $delete = $pdo->prepare("DELETE FROM dagco_checklist WHERE id = ?");
+    $delete->execute([$_POST['delete_id']]);
+
+    header("Location: " . $_SERVER['REQUEST_URI']);
+    exit;
+}
+
+$herhaling = $_GET['type'] ?? 'dagelijks';
+$allowed = ['dagelijks', 'wekelijks', 'maandelijks'];
+
+if (!in_array($herhaling, $allowed)) {
+    $herhaling = 'dagelijks';
+}
 
 $sql = "
-    SELECT t.taak, t.beschrijving, t.herhaling, t.status, w.voornaam AS dagco_naam
+    SELECT 
+        t.id,
+        t.taak, 
+        t.beschrijving, 
+        w.voornaam AS dagco_naam
     FROM dagco_checklist t
     LEFT JOIN werknemers w ON t.dagco_id = w.id
-    ORDER BY w.voornaam
+    WHERE t.herhaling = :herhaling
+    ORDER BY w.voornaam ASC, t.taak ASC
 ";
 
-$stmt = $pdo->query($sql);
-
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['herhaling' => $herhaling]);
+$rows = $stmt->fetchAll();
 ?>
+
 <!DOCTYPE html>
 <html lang="nl">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Technolab Intern</title>
-    <link rel="stylesheet" href="Style/Style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technolab Checklist</title>
+    <link rel="stylesheet" href="Style/Style.css">
 </head>
 
 <body>
 
     <section class="hero">
-        <article class="hero-content">
+        <div class="hero-content">
             <h1>
-                Technolab-intern.nl<br>
-                Dag coördinator<br>
+                Technolab<br>
+                Dag Coördinator<br>
                 Checklist
             </h1>
-            <p>
-                medemogelijk gemaakt door stagiaires.<br>
-                gebracht door toekomstkunde.
-            </p>
-        </article>
-        <figure class="hero-image"></figure>
+            <p>medemogelijk gemaakt door stagiaires.</p>
+        </div>
+        <div class="hero-image"></div>
     </section>
 
-    <!-- Checklist Section -->
     <section class="checklist">
-        <h2>Dagcoördinator Taken</h2>
 
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>Dagco</th>
-                <th>Taak</th>
-                <th>Beschrijving</th>
-                <th>Herhaling</th>
-                <th>Status</th>
-            </tr>
+        <h2><?= ucfirst($herhaling) ?> Taken</h2>
 
-            <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) : ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['dagco_naam']) ?></td>
-                    <td><?= htmlspecialchars($row['taak']) ?></td>
-                    <td><?= htmlspecialchars($row['beschrijving']) ?></td>
-                    <td><?= htmlspecialchars($row['herhaling']) ?></td>
-                    <td><?= htmlspecialchars($row['status']) ?></td>
-                </tr>
-            <?php endwhile; ?>
+        <div class="nav-tabs">
+            <a href="?type=dagelijks" class="<?= $herhaling == 'dagelijks' ? 'active' : '' ?>">Dagelijks</a>
+            <a href="?type=wekelijks" class="<?= $herhaling == 'wekelijks' ? 'active' : '' ?>">Wekelijks</a>
+            <a href="?type=maandelijks" class="<?= $herhaling == 'maandelijks' ? 'active' : '' ?>">Maandelijks</a>
+        </div>
 
-        </table>
+        <?php if (empty($rows)): ?>
+            <div class="empty-state">Geen taken gevonden.</div>
+        <?php else: ?>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dagco</th>
+                            <th>Taak</th>
+                            <th>Beschrijving</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <?php foreach ($rows as $row): ?>
+                            <tr>
+
+                                <td data-label="Dagco">
+                                    <?= htmlspecialchars($row['dagco_naam']) ?>
+                                </td>
+
+                                <td data-label="Taak">
+                                    <?= htmlspecialchars($row['taak']) ?>
+                                </td>
+
+
+                                <td data-label="Beschrijving">
+                                    <?= htmlspecialchars($row['beschrijving']) ?>
+                                </td>
+
+                                <td class="checkbox-cell">
+                                    <form method="POST">
+                                        <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" onchange="this.form.submit()">
+                                            <span class="checkmark"></span>
+                                        </label>
+                                    </form>
+                                </td>
+
+                            </tr>
+                        <?php endforeach; ?>
+
+                    </tbody>
+                </table>
+            </div>
+
+        <?php endif; ?>
+
     </section>
 
 </body>
