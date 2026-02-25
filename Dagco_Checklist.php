@@ -10,9 +10,32 @@ $pdo = new PDO(
 );
 
 
-if (isset($_POST['delete_id'])) {
-    $delete = $pdo->prepare("DELETE FROM dagco_checklist WHERE id = ?");
-    $delete->execute([$_POST['delete_id']]);
+// Ensure there is a `last_completed` column to record when a task was completed.
+try {
+    $colCheck = $pdo->query("SHOW COLUMNS FROM dagco_checklist LIKE 'last_completed'")->fetch();
+    if (!$colCheck) {
+        $pdo->exec("ALTER TABLE dagco_checklist ADD COLUMN last_completed DATETIME NULL DEFAULT NULL");
+    }
+} catch (Exception $e) {
+    // If altering fails, continue — site still works but completion timestamps won't persist.
+}
+
+// Handle completion toggle (instead of deleting tasks). The form sends `complete_id` and `checked` (0/1).
+if (isset($_POST['complete_id'])) {
+    $id = $_POST['complete_id'];
+    $checked = isset($_POST['checked']) && $_POST['checked'] == '1';
+
+    if ($checked) {
+        // store timestamp in Europe/Amsterdam timezone
+        $tz = new DateTimeZone('Europe/Amsterdam');
+        $now = new DateTime('now', $tz);
+        $stmt = $pdo->prepare("UPDATE dagco_checklist SET last_completed = ? WHERE id = ?");
+        $stmt->execute([$now->format('Y-m-d H:i:s'), $id]);
+    } else {
+        // mark as not completed
+        $stmt = $pdo->prepare("UPDATE dagco_checklist SET last_completed = NULL WHERE id = ?");
+        $stmt->execute([$id]);
+    }
 
     header("Location: " . $_SERVER['REQUEST_URI']);
     exit;
@@ -30,6 +53,7 @@ $sql = "
         t.id,
         t.taak, 
         t.beschrijving, 
+        t.last_completed,
         w.voornaam AS dagco_naam
     FROM dagco_checklist t
     LEFT JOIN werknemers w ON t.dagco_id = w.id
@@ -40,6 +64,40 @@ $sql = "
 $stmt = $pdo->prepare($sql);
 $stmt->execute(['herhaling' => $herhaling]);
 $rows = $stmt->fetchAll();
+
+// Determine the last reset time for the selected repetition type (Europe/Amsterdam timezone)
+$tz = new DateTimeZone('Europe/Amsterdam');
+$now = new DateTime('now', $tz);
+
+function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
+{
+    if ($type === 'dagelijks') {
+        $today7 = new DateTime($now->format('Y-m-d') . ' 07:00:00', $tz);
+        if ($now >= $today7) {
+            return $today7;
+        }
+        return (clone $today7)->modify('-1 day');
+    }
+
+    if ($type === 'wekelijks') {
+        $dow = (int)$now->format('N'); // 1 (Mon) - 7 (Sun)
+        $monday = (clone $now)->modify("-" . ($dow - 1) . " days");
+        $monday->setTime(7, 0, 0);
+        if ($now >= $monday) {
+            return $monday;
+        }
+        return (clone $monday)->modify('-7 days');
+    }
+
+    // maandelijks
+    $first = new DateTime($now->format('Y-m-01') . ' 07:00:00', $tz);
+    if ($now >= $first) {
+        return $first;
+    }
+    return (clone $first)->modify('-1 month');
+}
+
+$last_reset = get_last_reset($herhaling, $now, $tz);
 ?>
 
 <!DOCTYPE html>
@@ -93,6 +151,23 @@ $rows = $stmt->fetchAll();
                     <tbody>
 
                         <?php foreach ($rows as $row): ?>
+                            <?php
+                            $completed = false;
+                            if (!empty($row['last_completed'])) {
+                                try {
+                                    $lc = new DateTime($row['last_completed'], $tz);
+                                    if ($lc >= $last_reset) {
+                                        $completed = true;
+                                    }
+                                } catch (Exception $e) {
+                                    // ignore parse errors
+                                }
+                            }
+                            // If already completed for this period, don't render the row (it should be hidden)
+                            if ($completed) {
+                                continue;
+                            }
+                            ?>
                             <tr>
 
                                 <td data-label="Dagco">
@@ -109,10 +184,11 @@ $rows = $stmt->fetchAll();
                                 </td>
 
                                 <td class="checkbox-cell">
-                                    <form method="POST">
-                                        <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
+                                    <form method="POST" class="complete-form">
+                                        <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
+                                        <input type="hidden" name="checked" value="1" class="checked-input">
                                         <label class="checkbox-container">
-                                            <input type="checkbox" onchange="this.form.submit()">
+                                            <input type="checkbox" class="complete-checkbox">
                                             <span class="checkmark"></span>
                                         </label>
                                     </form>
@@ -128,6 +204,42 @@ $rows = $stmt->fetchAll();
         <?php endif; ?>
 
     </section>
+
+    <script>
+        // Send completion via fetch and remove row immediately (graceful fallback: form still works without JS)
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.complete-form').forEach(function(form) {
+                var checkbox = form.querySelector('.complete-checkbox');
+                checkbox.addEventListener('change', async function(e) {
+                    var id = form.querySelector('input[name="complete_id"]').value;
+                    var checked = checkbox.checked ? '1' : '0';
+
+                    var fd = new FormData();
+                    fd.append('complete_id', id);
+                    fd.append('checked', checked);
+
+                    try {
+                        var res = await fetch(window.location.pathname + window.location.search, {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin'
+                        });
+                        if (res.ok) {
+                            // remove the row from the table so it disappears immediately
+                            var tr = form.closest('tr');
+                            if (checked === '1' && tr) tr.remove();
+                            // if unchecked, reload to show the item again
+                            if (checked === '0') location.reload();
+                        } else {
+                            console.error('Completion request failed');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                });
+            });
+        });
+    </script>
 
 </body>
 
