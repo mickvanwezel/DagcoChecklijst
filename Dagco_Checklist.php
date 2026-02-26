@@ -9,30 +9,58 @@ $pdo = new PDO(
     ]
 );
 
-
-// Ensure there is a `last_completed` column to record when a task was completed.
+// Column Check
 try {
     $colCheck = $pdo->query("SHOW COLUMNS FROM dagco_checklist LIKE 'last_completed'")->fetch();
     if (!$colCheck) {
         $pdo->exec("ALTER TABLE dagco_checklist ADD COLUMN last_completed DATETIME NULL DEFAULT NULL");
     }
 } catch (Exception $e) {
-    // If altering fails, continue — site still works but completion timestamps won't persist.
 }
 
-// Handle completion toggle (instead of deleting tasks). The form sends `complete_id` and `checked` (0/1).
+// Handle actions (add / edit / delete) via AJAX
+if (isset($_POST['action'])) {
+    $action = $_POST['action'];
+    if ($action === 'add') {
+        $taak = $_POST['taak'] ?? '';
+        $beschrijving = $_POST['beschrijving'] ?? '';
+        $herhaling = $_POST['herhaling'] ?? 'dagelijks';
+        $stmt = $pdo->prepare("INSERT INTO dagco_checklist (taak, beschrijving, herhaling) VALUES (?, ?, ?)");
+        $stmt->execute([$taak, $beschrijving, $herhaling]);
+        echo json_encode(['ok' => true, 'id' => $pdo->lastInsertId()]);
+        exit;
+    }
+
+    if ($action === 'edit') {
+        $id = $_POST['id'] ?? 0;
+        $taak = $_POST['taak'] ?? '';
+        $beschrijving = $_POST['beschrijving'] ?? '';
+        $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ? WHERE id = ?");
+        $stmt->execute([$taak, $beschrijving, $id]);
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    if ($action === 'delete') {
+        $id = $_POST['id'] ?? 0;
+        $stmt = $pdo->prepare("DELETE FROM dagco_checklist WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+}
+
+// Completion Toggle
 if (isset($_POST['complete_id'])) {
     $id = $_POST['complete_id'];
     $checked = isset($_POST['checked']) && $_POST['checked'] == '1';
 
     if ($checked) {
-        // store timestamp in Europe/Amsterdam timezone
         $tz = new DateTimeZone('Europe/Amsterdam');
         $now = new DateTime('now', $tz);
         $stmt = $pdo->prepare("UPDATE dagco_checklist SET last_completed = ? WHERE id = ?");
         $stmt->execute([$now->format('Y-m-d H:i:s'), $id]);
     } else {
-        // mark as not completed
         $stmt = $pdo->prepare("UPDATE dagco_checklist SET last_completed = NULL WHERE id = ?");
         $stmt->execute([$id]);
     }
@@ -48,24 +76,23 @@ if (!in_array($herhaling, $allowed)) {
     $herhaling = 'dagelijks';
 }
 
+// Query
 $sql = "
     SELECT 
         t.id,
         t.taak, 
         t.beschrijving, 
-        t.last_completed,
-        w.voornaam AS dagco_naam
+        t.last_completed
     FROM dagco_checklist t
-    LEFT JOIN werknemers w ON t.dagco_id = w.id
     WHERE t.herhaling = :herhaling
-    ORDER BY w.voornaam ASC, t.taak ASC
+    ORDER BY t.taak ASC
 ";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute(['herhaling' => $herhaling]);
 $rows = $stmt->fetchAll();
 
-// Determine the last reset time for the selected repetition type (Europe/Amsterdam timezone)
+// Reset Logic
 $tz = new DateTimeZone('Europe/Amsterdam');
 $now = new DateTime('now', $tz);
 
@@ -78,7 +105,6 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
         }
         return (clone $today7)->modify('-1 day');
     }
-
     if ($type === 'wekelijks') {
         $dow = (int)$now->format('N'); // 1 (Mon) - 7 (Sun)
         $monday = (clone $now)->modify("-" . ($dow - 1) . " days");
@@ -88,8 +114,6 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
         }
         return (clone $monday)->modify('-7 days');
     }
-
-    // maandelijks
     $first = new DateTime($now->format('Y-m-01') . ' 07:00:00', $tz);
     if ($now >= $first) {
         return $first;
@@ -97,6 +121,7 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
     return (clone $first)->modify('-1 month');
 }
 
+// Last reset
 $last_reset = get_last_reset($herhaling, $now, $tz);
 ?>
 
@@ -120,6 +145,8 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                 Checklist
             </h1>
             <p>medemogelijk gemaakt door stagiaires.</p>
+            <p>gebracht door toekomstkunde.</p>
+
         </div>
         <div class="hero-image"></div>
     </section>
@@ -127,6 +154,10 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
     <section class="checklist">
 
         <h2><?= ucfirst($herhaling) ?> Taken</h2>
+
+        <div style="text-align:center; margin-bottom:14px;">
+            <button id="add-task" class="btn">+ Taak toevoegen</button>
+        </div>
 
         <div class="nav-tabs">
             <a href="?type=dagelijks" class="<?= $herhaling == 'dagelijks' ? 'active' : '' ?>">Dagelijks</a>
@@ -142,10 +173,10 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                 <table>
                     <thead>
                         <tr>
-                            <th>Dagco</th>
                             <th>Taak</th>
                             <th>Beschrijving</th>
                             <th></th>
+                            <th>Acties</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -160,24 +191,17 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                                         $completed = true;
                                     }
                                 } catch (Exception $e) {
-                                    // ignore parse errors
                                 }
                             }
-                            // If already completed for this period, don't render the row (it should be hidden)
                             if ($completed) {
                                 continue;
                             }
                             ?>
                             <tr>
 
-                                <td data-label="Dagco">
-                                    <?= htmlspecialchars($row['dagco_naam']) ?>
-                                </td>
-
                                 <td data-label="Taak">
                                     <?= htmlspecialchars($row['taak']) ?>
                                 </td>
-
 
                                 <td data-label="Beschrijving">
                                     <?= htmlspecialchars($row['beschrijving']) ?>
@@ -205,8 +229,27 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
 
     </section>
 
+    <!-- Modal: add / edit task -->
+    <div id="task-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="modal-title">Taak toevoegen</h3>
+            <form id="task-form">
+                <input type="hidden" name="action" id="modal-action" value="add">
+                <input type="hidden" name="id" id="modal-id" value="">
+                <input type="hidden" name="herhaling" id="modal-herhaling" value="<?= htmlspecialchars($herhaling) ?>">
+                <label for="modal-taak">Taak</label>
+                <input type="text" id="modal-taak" name="taak" required>
+                <label for="modal-beschrijving">Beschrijving</label>
+                <textarea id="modal-beschrijving" name="beschrijving" rows="3"></textarea>
+                <div class="modal-actions">
+                    <button type="button" id="modal-cancel" class="btn btn-secondary">Annuleren</button>
+                    <button type="submit" class="btn" id="modal-save">Opslaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Send completion via fetch and remove row immediately (graceful fallback: form still works without JS)
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.complete-form').forEach(function(form) {
                 var checkbox = form.querySelector('.complete-checkbox');
@@ -225,10 +268,21 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                             credentials: 'same-origin'
                         });
                         if (res.ok) {
-                            // remove the row from the table so it disappears immediately
                             var tr = form.closest('tr');
-                            if (checked === '1' && tr) tr.remove();
-                            // if unchecked, reload to show the item again
+                            if (checked === '1' && tr) {
+                                tr.classList.add('removing');
+                                var removed = function() {
+                                    if (tr && tr.parentNode) tr.parentNode.removeChild(tr);
+                                };
+                                var onTransitionEnd = function(ev) {
+                                    if (ev.propertyName === 'opacity') {
+                                        tr.removeEventListener('transitionend', onTransitionEnd);
+                                        removed();
+                                    }
+                                };
+                                tr.addEventListener('transitionend', onTransitionEnd);
+                                setTimeout(removed, 520);
+                            }
                             if (checked === '0') location.reload();
                         } else {
                             console.error('Completion request failed');
@@ -237,6 +291,108 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                         console.error(err);
                     }
                 });
+            });
+
+            // Modal add/edit logic
+            var modal = document.getElementById('task-modal');
+            var modalForm = document.getElementById('task-form');
+            var addBtn = document.getElementById('add-task');
+            var modalTitle = document.getElementById('modal-title');
+
+            function openModal(mode, data) {
+                modal.classList.remove('hidden');
+                document.getElementById('modal-action').value = mode;
+                if (mode === 'add') {
+                    modalTitle.textContent = 'Taak toevoegen';
+                    document.getElementById('modal-id').value = '';
+                    document.getElementById('modal-taak').value = '';
+                    document.getElementById('modal-beschrijving').value = '';
+                } else if (mode === 'edit') {
+                    modalTitle.textContent = 'Taak bewerken';
+                    document.getElementById('modal-id').value = data.id || '';
+                    document.getElementById('modal-taak').value = data.taak || '';
+                    document.getElementById('modal-beschrijving').value = data.beschrijving || '';
+                }
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+
+            addBtn.addEventListener('click', function() {
+                openModal('add');
+            });
+            document.getElementById('modal-cancel').addEventListener('click', closeModal);
+
+            modalForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                var fd = new FormData(modalForm);
+                try {
+                    var res = await fetch(window.location.pathname + window.location.search, {
+                        method: 'POST',
+                        body: fd,
+                        credentials: 'same-origin'
+                    });
+                    var json = await res.json();
+                    if (json.ok) {
+                        location.reload();
+                    } else {
+                        alert('Fout bij opslaan');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Netwerkfout');
+                }
+            });
+
+            document.querySelectorAll('tbody tr').forEach(function(tr) {
+                var td = document.createElement('td');
+                td.className = 'row-actions';
+                // edit button
+                var edit = document.createElement('button');
+                edit.className = 'btn btn-secondary';
+                edit.textContent = 'Bewerk';
+                edit.style.marginRight = '6px';
+                edit.addEventListener('click', function() {
+                    var id = tr.querySelector('input[name="complete_id"]').value;
+                    var taak = tr.querySelector('td[data-label="Taak"]').innerText.trim();
+                    var beschrijving = tr.querySelector('td[data-label="Beschrijving"]').innerText.trim();
+                    openModal('edit', {
+                        id: id,
+                        taak: taak,
+                        beschrijving: beschrijving
+                    });
+                });
+                td.appendChild(edit);
+                // delete button
+                var del = document.createElement('button');
+                del.className = 'btn';
+                del.textContent = 'Verwijder';
+                del.addEventListener('click', async function() {
+                    if (!confirm('Weet je zeker dat je deze taak wilt verwijderen?')) return;
+                    var id = tr.querySelector('input[name="complete_id"]').value;
+                    var f = new FormData();
+                    f.append('action', 'delete');
+                    f.append('id', id);
+                    try {
+                        var r = await fetch(window.location.pathname + window.location.search, {
+                            method: 'POST',
+                            body: f,
+                            credentials: 'same-origin'
+                        });
+                        var j = await r.json();
+                        if (j.ok) {
+                            tr.classList.add('removing');
+                            setTimeout(function() {
+                                tr.remove();
+                            }, 520);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                });
+                td.appendChild(del);
+                tr.querySelector('.checkbox-cell').after(td);
             });
         });
     </script>

@@ -1,7 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
 
-/* ================= ROOT ================= */
-
 :root {
     --tl-orange: #F4611E;
     --tl-yellow: #F9C52B;
@@ -21,8 +19,6 @@
     --radius-xl: 28px;
 }
 
-/* ================= GLOBAL ================= */
-
 * {
     margin: 0;
     padding: 0;
@@ -36,12 +32,10 @@ body {
     line-height: 1.6;
 }
 
-/* ================= HERO ================= */
-
 .hero {
     display: flex;
     flex-direction: column;
-    background: #F8F6FA;
+    background: var(--tl-purple);
     position: relative;
 }
 
@@ -53,13 +47,14 @@ body {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 32px;
     line-height: 1.2;
-    color: var(--tl-purple);
-    margin-bottom: 16px;
+    color: #ffffff;
+    margin-bottom: 22px;
 }
 
 .hero-content p {
     font-size: 16px;
-    color: #6F7C4F;
+    color: var(--tl-white);
+    margin: 1px 0 0;
 }
 
 .hero-image {
@@ -68,8 +63,6 @@ body {
     background: url("Images/technolab_microscoop.png") center/cover no-repeat;
 }
 
-/* ================= CHECKLIST ================= */
-
 .checklist {
     padding: 32px 16px 60px;
 }
@@ -77,12 +70,11 @@ body {
 .checklist h2 {
     text-align: center;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
+    font-size: 32px;
     color: var(--tl-purple);
-    margin-bottom: 24px;
+    margin-top: 35px;
+    margin-bottom: 25px;
 }
-
-/* ================= NAV TABS ================= */
 
 .nav-tabs {
     display: flex;
@@ -115,7 +107,71 @@ body {
     color: var(--tl-purple);
 }
 
-/* ================= TABLE WRAPPER ================= */
+.btn {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--tl-green), #3f7833);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 60;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    width: 360px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+
+.modal-content h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.modal-content label {
+    display: block;
+    font-size: 13px;
+    margin: 8px 0 4px;
+    color: var(--tl-text-muted);
+}
+
+.modal-content input[type="text"],
+.modal-content textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--tl-border);
+    border-radius: 8px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--tl-purple);
+    border: 1px solid var(--tl-border);
+}
 
 .table-wrapper {
     background: var(--tl-white);
@@ -126,8 +182,6 @@ body {
         0 8px 32px rgba(75, 35, 84, 0.08),
         0 0 0 1.5px var(--tl-border);
 }
-
-/* ================= TABLE ================= */
 
 table {
     width: 100%;
@@ -157,8 +211,6 @@ tbody tr:hover {
     background: #FFF5F1;
 }
 
-/* ================= CHECKBOX ================= */
-
 .checkbox-cell {
     width: 50px;
 }
@@ -180,7 +232,8 @@ tbody tr:hover {
     border-radius: 6px;
     border: 2px solid var(--tl-purple);
     display: inline-block;
-    transition: 0.2s ease;
+    position: relative;
+    transition: background 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(.2, .9, .3, 1);
 }
 
 .checkbox-container input:checked+.checkmark {
@@ -188,15 +241,67 @@ tbody tr:hover {
     border-color: var(--tl-green);
 }
 
-/* ================= EMPTY STATE ================= */
+.checkmark::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 6px;
+    height: 11px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+    transform-origin: center;
+}
+
+@keyframes tick-pop {
+    0% {
+        transform: rotate(45deg) scale(0);
+        opacity: 0
+    }
+
+    60% {
+        transform: rotate(45deg) scale(1.12);
+        opacity: 1
+    }
+
+    100% {
+        transform: rotate(45deg) scale(1);
+        opacity: 1
+    }
+}
+
+.checkbox-container input:checked+.checkmark::after {
+    animation: tick-pop 380ms cubic-bezier(.2, .9, .3, 1) forwards;
+}
+
+.checkbox-container input:not(:checked)+.checkmark {
+    background: transparent;
+}
+
+tbody tr {
+    transition: opacity 420ms ease, transform 420ms ease;
+}
+
+.removing {
+    opacity: 0;
+    transform: translateX(12px) scale(0.99);
+}
+
+.row-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0;
+}
 
 .empty-state {
     text-align: center;
     padding: 30px;
     color: var(--tl-text-muted);
 }
-
-/* ================= MOBILE RESPONSIVE ================= */
 
 @media (max-width: 768px) {
 
@@ -242,8 +347,6 @@ tbody tr:hover {
         margin-bottom: 10px;
     }
 }
-
-/* ================= DESKTOP HERO IMPROVEMENT ================= */
 
 @media (min-width: 900px) {
 
