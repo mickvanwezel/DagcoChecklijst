@@ -35,8 +35,9 @@ if (isset($_POST['action'])) {
         $id = $_POST['id'] ?? 0;
         $taak = $_POST['taak'] ?? '';
         $beschrijving = $_POST['beschrijving'] ?? '';
-        $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ? WHERE id = ?");
-        $stmt->execute([$taak, $beschrijving, $id]);
+        $herhaling = $_POST['herhaling'] ?? 'dagelijks';
+        $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ? WHERE id = ?");
+        $stmt->execute([$taak, $beschrijving, $herhaling, $id]);
         echo json_encode(['ok' => true]);
         exit;
     }
@@ -171,6 +172,12 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
 
             <div class="table-wrapper">
                 <table>
+                    <colgroup>
+                        <col>
+                        <col>
+                        <col>
+                        <col>
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Taak</th>
@@ -197,7 +204,7 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                                 continue;
                             }
                             ?>
-                            <tr>
+                            <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>">
 
                                 <td data-label="Taak">
                                     <?= htmlspecialchars($row['taak']) ?>
@@ -236,11 +243,16 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
             <form id="task-form">
                 <input type="hidden" name="action" id="modal-action" value="add">
                 <input type="hidden" name="id" id="modal-id" value="">
-                <input type="hidden" name="herhaling" id="modal-herhaling" value="<?= htmlspecialchars($herhaling) ?>">
                 <label for="modal-taak">Taak</label>
                 <input type="text" id="modal-taak" name="taak" required>
                 <label for="modal-beschrijving">Beschrijving</label>
                 <textarea id="modal-beschrijving" name="beschrijving" rows="3"></textarea>
+                <label for="modal-herhaling">Herhaling</label>
+                <select id="modal-herhaling" name="herhaling">
+                    <option value="dagelijks">Dagelijks</option>
+                    <option value="wekelijks">Wekelijks</option>
+                    <option value="maandelijks">Maandelijks</option>
+                </select>
                 <div class="modal-actions">
                     <button type="button" id="modal-cancel" class="btn btn-secondary">Annuleren</button>
                     <button type="submit" class="btn" id="modal-save">Opslaan</button>
@@ -307,11 +319,14 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                     document.getElementById('modal-id').value = '';
                     document.getElementById('modal-taak').value = '';
                     document.getElementById('modal-beschrijving').value = '';
+                    // default herhaling to current tab
+                    document.getElementById('modal-herhaling').value = '<?= htmlspecialchars($herhaling) ?>';
                 } else if (mode === 'edit') {
                     modalTitle.textContent = 'Taak bewerken';
                     document.getElementById('modal-id').value = data.id || '';
                     document.getElementById('modal-taak').value = data.taak || '';
                     document.getElementById('modal-beschrijving').value = data.beschrijving || '';
+                    document.getElementById('modal-herhaling').value = data.herhaling || '<?= htmlspecialchars($herhaling) ?>';
                 }
             }
 
@@ -348,6 +363,8 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
             document.querySelectorAll('tbody tr').forEach(function(tr) {
                 var td = document.createElement('td');
                 td.className = 'row-actions';
+                var inner = document.createElement('div');
+                inner.className = 'actions-inner';
                 // edit button
                 var edit = document.createElement('button');
                 edit.className = 'btn btn-secondary';
@@ -357,13 +374,14 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                     var id = tr.querySelector('input[name="complete_id"]').value;
                     var taak = tr.querySelector('td[data-label="Taak"]').innerText.trim();
                     var beschrijving = tr.querySelector('td[data-label="Beschrijving"]').innerText.trim();
+                    var herh = tr.getAttribute('data-herhaling') || '<?= htmlspecialchars($herhaling) ?>';
                     openModal('edit', {
                         id: id,
                         taak: taak,
-                        beschrijving: beschrijving
+                        beschrijving: beschrijving,
+                        herhaling: herh
                     });
                 });
-                td.appendChild(edit);
                 // delete button
                 var del = document.createElement('button');
                 del.className = 'btn';
@@ -391,7 +409,9 @@ $last_reset = get_last_reset($herhaling, $now, $tz);
                         console.error(err);
                     }
                 });
-                td.appendChild(del);
+                td.appendChild(inner);
+                inner.appendChild(edit);
+                inner.appendChild(del);
                 tr.querySelector('.checkbox-cell').after(td);
             });
         });

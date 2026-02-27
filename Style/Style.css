@@ -160,6 +160,14 @@ body {
     border-radius: 8px;
 }
 
+.modal-content select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--tl-border);
+    border-radius: 8px;
+    background: white;
+}
+
 .modal-actions {
     display: flex;
     gap: 8px;
@@ -186,6 +194,22 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
+}
+
+colgroup col:nth-child(1) {
+    width: 30%;
+}
+
+colgroup col:nth-child(2) {
+    width: auto;
+}
+
+colgroup col:nth-child(3) {
+    width: 64px;
+}
+
+colgroup col:nth-child(4) {
+    width: 160px;
 }
 
 thead {
@@ -290,11 +314,40 @@ tbody tr {
 }
 
 .row-actions {
+    padding: 0;
+}
+
+.row-actions .actions-inner {
     display: flex;
     gap: 8px;
     align-items: center;
     justify-content: center;
-    padding-left: 0;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    min-width: 160px;
+    height: 100%;
+}
+
+thead th:nth-child(4) {
+    text-align: center;
+    width: 160px;
+}
+
+tbody td:nth-child(4) {
+    text-align: center;
+    vertical-align: middle;
+}
+
+th,
+td {
+    vertical-align: middle;
+}
+
+thead th:nth-child(3),
+tbody td:nth-child(3) {
+    text-align: center;
+    width: 64px;
 }
 
 .empty-state {
@@ -304,47 +357,21 @@ tbody tr {
 }
 
 @media (max-width: 768px) {
+    .table-wrapper {
+        overflow-x: auto;
+    }
 
-    table,
-    thead,
-    tbody,
+    table {
+        min-width: 720px;
+    }
+
     th,
-    td,
-    tr {
-        display: block;
-    }
-
-    thead {
-        display: none;
-    }
-
-    tr {
-        background: var(--tl-white);
-        margin-bottom: 16px;
-        border-radius: var(--radius-md);
-        padding: 16px;
-        box-shadow: 0 6px 18px rgba(75, 35, 84, 0.08);
-        border: 1px solid var(--tl-border);
-    }
-
     td {
-        border: none;
-        padding: 6px 0;
-    }
-
-    td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        display: block;
-        font-size: 13px;
-        color: var(--tl-purple);
-        margin-bottom: 2px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        padding: 10px 12px;
     }
 
     .checkbox-cell {
-        margin-bottom: 10px;
+        width: 44px;
     }
 }
 
