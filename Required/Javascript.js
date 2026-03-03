@@ -41,7 +41,7 @@
                 });
             });
 
-            // Modal add/edit logic
+            // 
             var modal = document.getElementById('task-modal');
             var modalForm = document.getElementById('task-form');
             var addBtn = document.getElementById('add-task');
