@@ -42,73 +42,103 @@ require 'Required/PHP.php';
             <a href="?type=maandelijks" class="<?= $herhaling == 'maandelijks' ? 'active' : '' ?>">Maandelijks</a>
         </div>
 
-        <?php if (empty($rows)): ?>
-            <div class="empty-state">Geen taken gevonden.</div>
-        <?php else: ?>
+        <div class="table-wrapper">
+            <table>
+                <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Taak</th>
+                        <th>Beschrijving</th>
+                        <th></th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
 
-            <div class="table-wrapper">
-                <table>
-                    <colgroup>
-                        <col>
-                        <col>
-                        <col>
-                        <col>
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th>Taak</th>
-                            <th>Beschrijving</th>
-                            <th></th>
-                            <th>Acties</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                    <?php if ($herhaling === 'dagelijks'): ?>
+                        <?php
+                        $labels = [
+                            'start' => 'Start van de dag',
+                            'door' => 'Door de dag heen',
+                            'eind' => 'Einds van de dag'
+                        ];
 
-                        <?php foreach ($rows as $row): ?>
-                            <?php
-                            $completed = false;
-                            if (!empty($row['last_completed'])) {
-                                try {
-                                    $lc = new DateTime($row['last_completed'], $tz);
-                                    if ($lc >= $last_reset) {
-                                        $completed = true;
-                                    }
-                                } catch (Exception $e) {
-                                }
-                            }
-                            if ($completed) {
-                                continue;
-                            }
-                            ?>
-                            <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>">
+                        // group rows by categorie so we can always render headers
+                        $groups = ['start' => [], 'door' => [], 'eind' => []];
+                        foreach ($rows as $r) {
+                            $cat = $r['categorie'] ?? 'door';
+                            if (!isset($groups[$cat])) $groups[$cat] = [];
+                            $groups[$cat][] = $r;
+                        }
 
-                                <td data-label="Taak">
-                                    <?= htmlspecialchars($row['taak']) ?>
-                                </td>
+                        foreach (['start', 'door', 'eind'] as $cat):
+                            echo '<tr class="group"><td colspan="4">' . htmlspecialchars($labels[$cat]) . '</td></tr>';
+                            if (empty($groups[$cat])):
+                                echo '<tr class="empty-cat"><td colspan="4" style="padding:10px 16px;color:var(--tl-text-muted)">Geen taken meer in deze categorie.</td></tr>';
+                            else:
+                                foreach ($groups[$cat] as $row):
+                        ?>
 
-                                <td data-label="Beschrijving">
-                                    <?= htmlspecialchars($row['beschrijving']) ?>
-                                </td>
+                                    <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>" data-categorie="<?= htmlspecialchars($row['categorie'] ?? 'door') ?>">
 
-                                <td class="checkbox-cell">
-                                    <form method="POST" class="complete-form">
-                                        <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
-                                        <input type="hidden" name="checked" value="1" class="checked-input">
-                                        <label class="checkbox-container">
-                                            <input type="checkbox" class="complete-checkbox">
-                                            <span class="checkmark"></span>
-                                        </label>
-                                    </form>
-                                </td>
+                                        <td data-label="Taak">
+                                            <?= htmlspecialchars($row['taak']) ?>
+                                        </td>
 
+                                        <td data-label="Beschrijving">
+                                            <?= htmlspecialchars($row['beschrijving']) ?>
+                                        </td>
+
+                                        <td class="checkbox-cell">
+                                            <form method="POST" class="complete-form">
+                                                <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
+                                                <input type="hidden" name="checked" value="1" class="checked-input">
+                                                <label class="checkbox-container">
+                                                    <input type="checkbox" class="complete-checkbox">
+                                                    <span class="checkmark"></span>
+                                                </label>
+                                            </form>
+                                        </td>
+
+                                    </tr>
+
+                        <?php endforeach;
+                            endif;
+                        endforeach;
+                        ?>
+                    <?php else: ?>
+                        <?php if (empty($rows)): ?>
+                            <tr class="empty-cat">
+                                <td colspan="4" style="padding:10px 16px;color:var(--tl-text-muted)">Alle taken voltooid voor deze periode.</td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php else: ?>
+                            <?php foreach ($rows as $row): ?>
+                                <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>">
+                                    <td data-label="Taak"><?= htmlspecialchars($row['taak']) ?></td>
+                                    <td data-label="Beschrijving"><?= htmlspecialchars($row['beschrijving']) ?></td>
+                                    <td class="checkbox-cell">
+                                        <form method="POST" class="complete-form">
+                                            <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
+                                            <input type="hidden" name="checked" value="1" class="checked-input">
+                                            <label class="checkbox-container">
+                                                <input type="checkbox" class="complete-checkbox">
+                                                <span class="checkmark"></span>
+                                            </label>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    <?php endif; ?>
 
-                    </tbody>
-                </table>
-            </div>
-
-        <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
 
     </section>
 
@@ -129,6 +159,13 @@ require 'Required/PHP.php';
                     <option value="wekelijks">Wekelijks</option>
                     <option value="maandelijks">Maandelijks</option>
                 </select>
+
+                <label for="modal-categorie">Categorie</label>
+                <select id="modal-categorie" name="categorie">
+                    <option value="start">Start van de dag</option>
+                    <option value="door">Door de dag heen</option>
+                    <option value="eind">Einds van de dag</option>
+                </select>
                 <div class="modal-actions">
                     <button type="button" id="modal-cancel" class="btn btn-secondary">Annuleren</button>
                     <button type="submit" class="btn" id="modal-save">Opslaan</button>
@@ -137,7 +174,7 @@ require 'Required/PHP.php';
         </div>
     </div>
 
-    
+
 
 </body>
 
