@@ -356,6 +356,29 @@ tbody td:nth-child(3) {
     color: var(--tl-text-muted);
 }
 
+/* Group header row style */
+tr.group td {
+    background: rgba(75, 35, 84, 0.06);
+    /* subtle purple background */
+    color: var(--tl-purple);
+    font-weight: 700;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--tl-border);
+    font-size: 16px;
+}
+
+tr.group td small {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+    margin-left: 8px;
+}
+
+tr.empty-cat td {
+    color: var(--tl-text-muted);
+    font-style: italic;
+    padding: 10px 16px;
+}
+
 @media (max-width: 768px) {
     .table-wrapper {
         overflow-x: auto;

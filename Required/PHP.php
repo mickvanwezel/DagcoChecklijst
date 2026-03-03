@@ -25,8 +25,9 @@ if (isset($_POST['action'])) {
         $taak = $_POST['taak'] ?? '';
         $beschrijving = $_POST['beschrijving'] ?? '';
         $herhaling = $_POST['herhaling'] ?? 'dagelijks';
-        $stmt = $pdo->prepare("INSERT INTO dagco_checklist (taak, beschrijving, herhaling) VALUES (?, ?, ?)");
-        $stmt->execute([$taak, $beschrijving, $herhaling]);
+        $categorie = $_POST['categorie'] ?? 'door';
+        $stmt = $pdo->prepare("INSERT INTO dagco_checklist (taak, beschrijving, herhaling, categorie) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$taak, $beschrijving, $herhaling, $categorie]);
         echo json_encode(['ok' => true, 'id' => $pdo->lastInsertId()]);
         exit;
     }
@@ -36,8 +37,15 @@ if (isset($_POST['action'])) {
         $taak = $_POST['taak'] ?? '';
         $beschrijving = $_POST['beschrijving'] ?? '';
         $herhaling = $_POST['herhaling'] ?? 'dagelijks';
-        $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ? WHERE id = ?");
-        $stmt->execute([$taak, $beschrijving, $herhaling, $id]);
+        // Only update categorie if it was submitted (category selectable only on create)
+        if (isset($_POST['categorie'])) {
+            $categorie = $_POST['categorie'] ?? 'door';
+            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, categorie = ? WHERE id = ?");
+            $stmt->execute([$taak, $beschrijving, $herhaling, $categorie, $id]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ? WHERE id = ?");
+            $stmt->execute([$taak, $beschrijving, $herhaling, $id]);
+        }
         echo json_encode(['ok' => true]);
         exit;
     }
@@ -77,23 +85,7 @@ if (!in_array($herhaling, $allowed)) {
     $herhaling = 'dagelijks';
 }
 
-// SQL
-$sql = "
-    SELECT 
-        t.id,
-        t.taak, 
-        t.beschrijving, 
-        t.last_completed
-    FROM dagco_checklist t
-    WHERE t.herhaling = :herhaling
-    ORDER BY t.taak ASC
-";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute(['herhaling' => $herhaling]);
-$rows = $stmt->fetchAll();
-
-// herhaling en reset
+// herhaling en reset (define timezone and last reset BEFORE fetching rows)
 $tz = new DateTimeZone('Europe/Amsterdam');
 $now = new DateTime('now', $tz);
 
@@ -124,4 +116,37 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
 
 // bereken laatste reset tijd
 $last_reset = get_last_reset($herhaling, $now, $tz);
-?>
+
+// SQL - include categorie and order by category (start, door, eind)
+$sql = "
+    SELECT 
+        t.id,
+        t.taak, 
+        t.beschrijving, 
+        t.last_completed,
+        t.categorie
+    FROM dagco_checklist t
+    WHERE t.herhaling = :herhaling
+    ORDER BY FIELD(t.categorie,'start','door','eind'), t.taak ASC
+";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['herhaling' => $herhaling]);
+$rows = $stmt->fetchAll();
+
+// Filter out already-completed rows according to last_reset so template can render grouped lists
+$visible = [];
+foreach ($rows as $row) {
+    $completed = false;
+    if (!empty($row['last_completed'])) {
+        try {
+            $lc = new DateTime($row['last_completed'], $tz);
+            if ($lc >= $last_reset) {
+                $completed = true;
+            }
+        } catch (Exception $e) {
+        }
+    }
+    if (!$completed) $visible[] = $row;
+}
+$rows = $visible;
