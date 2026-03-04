@@ -12,6 +12,8 @@
     --tl-text: #1A1A2E;
     --tl-text-muted: #6B6B7A;
     --tl-border: #E4E0DB;
+    --tl-red: #ff0000;
+
 
     --radius-sm: 8px;
     --radius-md: 14px;
@@ -158,6 +160,7 @@ body {
     padding: 8px;
     border: 1px solid var(--tl-border);
     border-radius: 8px;
+    font-family: inherit;
 }
 
 .modal-content select {
@@ -166,6 +169,17 @@ body {
     border: 1px solid var(--tl-border);
     border-radius: 8px;
     background: white;
+    font-family: inherit;
+}
+
+/* ensure inputs and buttons inherit page font for consistent typography */
+.modal-content input,
+.modal-content textarea,
+.modal-content select,
+.modal-content button,
+.btn,
+button {
+    font-family: inherit;
 }
 
 .modal-actions {
@@ -197,15 +211,15 @@ table {
 }
 
 colgroup col:nth-child(1) {
-    width: 30%;
+    width: 64px;
 }
 
 colgroup col:nth-child(2) {
-    width: auto;
+    width: 30%;
 }
 
 colgroup col:nth-child(3) {
-    width: 64px;
+    width: auto;
 }
 
 colgroup col:nth-child(4) {
@@ -344,8 +358,8 @@ td {
     vertical-align: middle;
 }
 
-thead th:nth-child(3),
-tbody td:nth-child(3) {
+thead th:nth-child(1),
+tbody td:nth-child(1) {
     text-align: center;
     width: 64px;
 }

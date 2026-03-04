@@ -52,9 +52,9 @@ require 'Required/PHP.php';
                 </colgroup>
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Taak</th>
                         <th>Beschrijving</th>
-                        <th></th>
                         <th>Acties</th>
                     </tr>
                 </thead>
@@ -65,7 +65,7 @@ require 'Required/PHP.php';
                         $labels = [
                             'start' => 'Start van de dag',
                             'door' => 'Door de dag heen',
-                            'eind' => 'Einds van de dag'
+                            'eind' => 'Eind van de dag'
                         ];
                         $groups = ['start' => [], 'door' => [], 'eind' => []];
                         foreach ($rows as $r) {
@@ -84,14 +84,6 @@ require 'Required/PHP.php';
 
                                     <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>" data-categorie="<?= htmlspecialchars($row['categorie'] ?? 'door') ?>">
 
-                                        <td data-label="Taak">
-                                            <?= htmlspecialchars($row['taak']) ?>
-                                        </td>
-
-                                        <td data-label="Beschrijving">
-                                            <?= htmlspecialchars($row['beschrijving']) ?>
-                                        </td>
-
                                         <td class="checkbox-cell">
                                             <form method="POST" class="complete-form">
                                                 <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
@@ -101,6 +93,14 @@ require 'Required/PHP.php';
                                                     <span class="checkmark"></span>
                                                 </label>
                                             </form>
+                                        </td>
+
+                                        <td data-label="Taak">
+                                            <?= htmlspecialchars($row['taak']) ?>
+                                        </td>
+
+                                        <td data-label="Beschrijving">
+                                            <?= htmlspecialchars($row['beschrijving']) ?>
                                         </td>
 
                                     </tr>
@@ -117,8 +117,6 @@ require 'Required/PHP.php';
                         <?php else: ?>
                             <?php foreach ($rows as $row): ?>
                                 <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>">
-                                    <td data-label="Taak"><?= htmlspecialchars($row['taak']) ?></td>
-                                    <td data-label="Beschrijving"><?= htmlspecialchars($row['beschrijving']) ?></td>
                                     <td class="checkbox-cell">
                                         <form method="POST" class="complete-form">
                                             <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
@@ -129,6 +127,8 @@ require 'Required/PHP.php';
                                             </label>
                                         </form>
                                     </td>
+                                    <td data-label="Taak"><?= htmlspecialchars($row['taak']) ?></td>
+                                    <td data-label="Beschrijving"><?= htmlspecialchars($row['beschrijving']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -162,7 +162,7 @@ require 'Required/PHP.php';
                 <select id="modal-categorie" name="categorie">
                     <option value="start">Start van de dag</option>
                     <option value="door">Door de dag heen</option>
-                    <option value="eind">Einds van de dag</option>
+                    <option value="eind">Eind van de dag</option>
                 </select>
                 <div class="modal-actions">
                     <button type="button" id="modal-cancel" class="btn btn-secondary">Annuleren</button>

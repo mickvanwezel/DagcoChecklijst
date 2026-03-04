@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (tr.classList && tr.classList.contains('group')) return;
         if (tr.querySelector('.row-actions')) return;
         var checkboxCell = tr.querySelector('.checkbox-cell');
-        if (!checkboxCell) return; 
+        if (!checkboxCell) return;
 
         var td = document.createElement('td');
         td.className = 'row-actions';
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
         td.appendChild(inner);
         inner.appendChild(edit);
         inner.appendChild(del);
-        checkboxCell.after(td);
+        tr.appendChild(td);
     });
 
     // Ensure placeholder
