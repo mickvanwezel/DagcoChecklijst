@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Modal add/edit logic
     var modal = document.getElementById('task-modal');
     var modalForm = document.getElementById('task-form');
     var addBtn = document.getElementById('add-task');
@@ -56,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modal-id').value = '';
             document.getElementById('modal-taak').value = '';
             document.getElementById('modal-beschrijving').value = '';
-            // default herhaling and categorie to current tab / door
             document.getElementById('modal-herhaling').value = '<?= htmlspecialchars($herhaling) ?>';
             var catEl = document.getElementById('modal-categorie'); if (catEl) { catEl.value = 'door'; catEl.disabled = false; }
         } else if (mode === 'edit') {
@@ -68,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function () {
             var catEl2 = document.getElementById('modal-categorie');
             if (catEl2) {
                 if (data.categorie) catEl2.value = data.categorie;
-                // disable category on edit so it cannot be changed
                 catEl2.disabled = true;
             }
         }
@@ -105,12 +102,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.querySelectorAll('tbody tr').forEach(function (tr) {
-        // skip group header rows (they're full-width category rows)
         if (tr.classList && tr.classList.contains('group')) return;
-        // skip if actions already present
         if (tr.querySelector('.row-actions')) return;
         var checkboxCell = tr.querySelector('.checkbox-cell');
-        if (!checkboxCell) return; // nothing to attach actions to
+        if (!checkboxCell) return; 
 
         var td = document.createElement('td');
         td.className = 'row-actions';
@@ -167,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
         checkboxCell.after(td);
     });
 
-    // Ensure placeholder rows exist after deletions/completions
+    // Ensure placeholder
     function createEmptyRow(message) {
         var tr = document.createElement('tr');
         tr.className = 'empty-cat';
@@ -181,11 +176,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function ensurePlaceholders() {
-        // If grouped (daily), ensure each group header has an empty row when no tasks
+        // ensure each group header has an empty row when no tasks
         var groupHeaders = Array.from(document.querySelectorAll('tbody tr.group'));
         if (groupHeaders.length) {
             groupHeaders.forEach(function (hdr) {
-                // count following rows until next group
                 var next = hdr.nextElementSibling;
                 var hasTasks = false;
                 var existingEmpty = null;
@@ -216,7 +210,5 @@ document.addEventListener('DOMContentLoaded', function () {
             existing.parentNode.removeChild(existing);
         }
     }
-
-    // Run once on load to fix any dynamic removals
     ensurePlaceholders();
 });

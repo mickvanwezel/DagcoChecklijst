@@ -67,8 +67,6 @@ require 'Required/PHP.php';
                             'door' => 'Door de dag heen',
                             'eind' => 'Einds van de dag'
                         ];
-
-                        
                         $groups = ['start' => [], 'door' => [], 'eind' => []];
                         foreach ($rows as $r) {
                             $cat = $r['categorie'] ?? 'door';
