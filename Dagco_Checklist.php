@@ -68,7 +68,7 @@ require 'Required/PHP.php';
                             'eind' => 'Einds van de dag'
                         ];
 
-                        // group rows by categorie so we can always render headers
+                        
                         $groups = ['start' => [], 'door' => [], 'eind' => []];
                         foreach ($rows as $r) {
                             $cat = $r['categorie'] ?? 'door';
