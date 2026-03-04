@@ -37,7 +37,6 @@ if (isset($_POST['action'])) {
         $taak = $_POST['taak'] ?? '';
         $beschrijving = $_POST['beschrijving'] ?? '';
         $herhaling = $_POST['herhaling'] ?? 'dagelijks';
-        // Only update categorie if it was submitted (category selectable only on create)
         if (isset($_POST['categorie'])) {
             $categorie = $_POST['categorie'] ?? 'door';
             $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, categorie = ? WHERE id = ?");
@@ -85,7 +84,7 @@ if (!in_array($herhaling, $allowed)) {
     $herhaling = 'dagelijks';
 }
 
-// herhaling en reset (define timezone and last reset BEFORE fetching rows)
+// herhaling en reset
 $tz = new DateTimeZone('Europe/Amsterdam');
 $now = new DateTime('now', $tz);
 
@@ -99,7 +98,7 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
         return (clone $today7)->modify('-1 day');
     }
     if ($type === 'wekelijks') {
-        $dow = (int)$now->format('N'); // 1 (Mon) - 7 (Sun)
+        $dow = (int)$now->format('N'); 
         $monday = (clone $now)->modify("-" . ($dow - 1) . " days");
         $monday->setTime(7, 0, 0);
         if ($now >= $monday) {
@@ -113,11 +112,8 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
     }
     return (clone $first)->modify('-1 month');
 }
-
-// bereken laatste reset tijd
 $last_reset = get_last_reset($herhaling, $now, $tz);
 
-// SQL - include categorie and order by category (start, door, eind)
 $sql = "
     SELECT 
         t.id,
@@ -134,7 +130,6 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute(['herhaling' => $herhaling]);
 $rows = $stmt->fetchAll();
 
-// Filter out already-completed rows according to last_reset so template can render grouped lists
 $visible = [];
 foreach ($rows as $row) {
     $completed = false;
