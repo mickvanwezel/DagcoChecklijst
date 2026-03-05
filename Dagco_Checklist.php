@@ -150,7 +150,8 @@ require 'Required/PHP.php';
                 <label for="modal-taak">Taak</label>
                 <input type="text" id="modal-taak" name="taak" required>
                 <label for="modal-beschrijving">Beschrijving</label>
-                <textarea id="modal-beschrijving" name="beschrijving" rows="3"></textarea>
+                <div id="modal-beschrijving" class="text-input-multiline" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Beschrijving"></div>
+                <input type="hidden" name="beschrijving" id="modal-beschrijving-hidden">
                 <label for="modal-herhaling">Herhaling</label>
                 <select id="modal-herhaling" name="herhaling">
                     <option value="dagelijks">Dagelijks</option>
@@ -158,12 +159,14 @@ require 'Required/PHP.php';
                     <option value="maandelijks">Maandelijks</option>
                 </select>
 
-                <label for="modal-categorie">Categorie</label>
-                <select id="modal-categorie" name="categorie">
-                    <option value="start">Start van de dag</option>
-                    <option value="door">Door de dag heen</option>
-                    <option value="eind">Eind van de dag</option>
-                </select>
+                <div id="modal-categorie-group">
+                    <label for="modal-categorie">Categorie</label>
+                    <select id="modal-categorie" name="categorie">
+                        <option value="start">Start van de dag</option>
+                        <option value="door">Door de dag heen</option>
+                        <option value="eind">Eind van de dag</option>
+                    </select>
+                </div>
                 <div class="modal-actions">
                     <button type="button" id="modal-cancel" class="btn btn-secondary">Annuleren</button>
                     <button type="submit" class="btn" id="modal-save">Opslaan</button>

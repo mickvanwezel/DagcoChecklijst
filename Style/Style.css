@@ -161,6 +161,7 @@ body {
     border: 1px solid var(--tl-border);
     border-radius: 8px;
     font-family: inherit;
+    font-size: 14px;
 }
 
 .modal-content select {
@@ -170,6 +171,31 @@ body {
     border-radius: 8px;
     background: white;
     font-family: inherit;
+    font-size: 14px;
+}
+
+/* contenteditable styled to look like a 3-line input (single element, not a textarea) */
+.text-input-multiline {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--tl-border);
+    border-radius: 8px;
+    min-height: calc(1.4em * 3 + 12px);
+    line-height: 1.4;
+    overflow-y: auto;
+    font-family: inherit;
+    font-size: 14px;
+    white-space: pre-wrap;
+    outline: none;
+}
+.text-input-multiline:focus {
+    outline: none;
+}
+
+/* placeholder support for contenteditable */
+.text-input-multiline[data-placeholder]:empty:before {
+    content: attr(data-placeholder);
+    color: var(--tl-text-muted);
 }
 
 /* ensure inputs and buttons inherit page font for consistent typography */
@@ -358,15 +384,34 @@ tbody tr {
     cursor: pointer;
     transition: background 120ms ease, color 120ms ease, transform 80ms ease;
 }
+
 .icon-btn:hover {
-    background: rgba(75,35,84,0.06);
+    background: rgba(75, 35, 84, 0.06);
     transform: translateY(-1px);
 }
-.icon-btn:active { transform: translateY(0); }
-.icon-btn svg { display: block; color: inherit; width:20px; height:20px; }
-.icon-btn.edit { color: var(--tl-green); }
-.icon-btn.danger { color: var(--tl-red); }
-.icon-btn.danger:hover { background: rgba(255,0,0,0.06); }
+
+.icon-btn:active {
+    transform: translateY(0);
+}
+
+.icon-btn svg {
+    display: block;
+    color: inherit;
+    width: 20px;
+    height: 20px;
+}
+
+.icon-btn.edit {
+    color: var(--tl-green);
+}
+
+.icon-btn.danger {
+    color: var(--tl-red);
+}
+
+.icon-btn.danger:hover {
+    background: rgba(255, 0, 0, 0.06);
+}
 
 thead th:nth-child(4) {
     text-align: center;

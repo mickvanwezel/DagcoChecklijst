@@ -54,19 +54,33 @@ document.addEventListener('DOMContentLoaded', function () {
             modalTitle.textContent = 'Taak toevoegen';
             document.getElementById('modal-id').value = '';
             document.getElementById('modal-taak').value = '';
-            document.getElementById('modal-beschrijving').value = '';
-            document.getElementById('modal-herhaling').value = '<?= htmlspecialchars($herhaling) ?>';
-            var catEl = document.getElementById('modal-categorie'); if (catEl) { catEl.value = 'door'; catEl.disabled = false; }
+            // contenteditable div used for multi-line single-element input
+            var md = document.getElementById('modal-beschrijving');
+            if (md) md.innerText = '';
+            // default to dagelijks when creating a new taak
+            document.getElementById('modal-herhaling').value = 'dagelijks';
+            var catEl = document.getElementById('modal-categorie');
+            var catGroup = document.getElementById('modal-categorie-group');
+            if (catEl && catGroup) { catEl.value = 'door'; catEl.disabled = false; catGroup.style.display = ''; }
         } else if (mode === 'edit') {
             modalTitle.textContent = 'Taak bewerken';
             document.getElementById('modal-id').value = data.id || '';
             document.getElementById('modal-taak').value = data.taak || '';
-            document.getElementById('modal-beschrijving').value = data.beschrijving || '';
+            var md2 = document.getElementById('modal-beschrijving');
+            if (md2) md2.innerText = data.beschrijving || '';
             document.getElementById('modal-herhaling').value = data.herhaling || '<?= htmlspecialchars($herhaling) ?>';
             var catEl2 = document.getElementById('modal-categorie');
-            if (catEl2) {
+            var catGroup2 = document.getElementById('modal-categorie-group');
+            if (catEl2 && catGroup2) {
                 if (data.categorie) catEl2.value = data.categorie;
-                catEl2.disabled = true;
+                // categories only apply to 'dagelijks' tasks — hide for others
+                if ((data.herhaling || '') !== 'dagelijks') {
+                    catGroup2.style.display = 'none';
+                    catEl2.disabled = true;
+                } else {
+                    catGroup2.style.display = '';
+                    catEl2.disabled = true; // keep immutable on edit
+                }
             }
         }
     }
@@ -80,8 +94,31 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('modal-cancel').addEventListener('click', closeModal);
 
+    // toggle categorie group visibility when herhaling changes
+    var modalHerh = document.getElementById('modal-herhaling');
+    if (modalHerh) {
+        modalHerh.addEventListener('change', function () {
+            var val = this.value;
+            var cg = document.getElementById('modal-categorie-group');
+            var sel = document.getElementById('modal-categorie');
+            if (cg) {
+                if (val === 'dagelijks') {
+                    cg.style.display = '';
+                    if (sel) sel.disabled = false;
+                } else {
+                    cg.style.display = 'none';
+                    if (sel) sel.disabled = true;
+                }
+            }
+        });
+    }
+
     modalForm.addEventListener('submit', async function (e) {
         e.preventDefault();
+        // copy contenteditable value into hidden input so FormData includes it
+        var editable = document.getElementById('modal-beschrijving');
+        var hidden = document.getElementById('modal-beschrijving-hidden');
+        if (editable && hidden) hidden.value = editable.innerText.trim();
         var fd = new FormData(modalForm);
         try {
             var res = await fetch(window.location.pathname + window.location.search, {
