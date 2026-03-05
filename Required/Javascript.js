@@ -105,17 +105,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (tr.classList && tr.classList.contains('group')) return;
         if (tr.querySelector('.row-actions')) return;
         var checkboxCell = tr.querySelector('.checkbox-cell');
-        if (!checkboxCell) return; 
+        if (!checkboxCell) return;
 
         var td = document.createElement('td');
         td.className = 'row-actions';
         var inner = document.createElement('div');
         inner.className = 'actions-inner';
-        // edit button
+        // edit button (icon-only)
         var edit = document.createElement('button');
-        edit.className = 'btn btn-secondary';
-        edit.textContent = 'Bewerk';
-        edit.style.marginRight = '6px';
+        edit.className = 'icon-btn edit';
+        edit.title = 'Bewerk';
+        edit.setAttribute('aria-label', 'Bewerk taak');
+        edit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/><path d="M20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>';
         edit.addEventListener('click', function () {
             var id = tr.querySelector('input[name="complete_id"]').value;
             var taak = tr.querySelector('td[data-label="Taak"]').innerText.trim();
@@ -128,10 +129,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 herhaling: herh
             });
         });
-        // delete button
+        // delete button (icon-only)
         var del = document.createElement('button');
-        del.className = 'btn';
-        del.textContent = 'Verwijder';
+        del.className = 'icon-btn danger';
+        del.title = 'Verwijder';
+        del.setAttribute('aria-label', 'Verwijder taak');
+        del.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a2 2 0 012-2h0a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         del.addEventListener('click', async function () {
             if (!confirm('Weet je zeker dat je deze taak wilt verwijderen?')) return;
             var id = tr.querySelector('input[name="complete_id"]').value;
@@ -159,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
         td.appendChild(inner);
         inner.appendChild(edit);
         inner.appendChild(del);
-        checkboxCell.after(td);
+        tr.appendChild(td);
     });
 
     // Ensure placeholder
