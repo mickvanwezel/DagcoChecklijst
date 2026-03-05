@@ -343,6 +343,31 @@ tbody tr {
     height: 100%;
 }
 
+/* Icon-only action buttons */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 6px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--tl-purple);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, transform 80ms ease;
+}
+.icon-btn:hover {
+    background: rgba(75,35,84,0.06);
+    transform: translateY(-1px);
+}
+.icon-btn:active { transform: translateY(0); }
+.icon-btn svg { display: block; color: inherit; width:20px; height:20px; }
+.icon-btn.edit { color: var(--tl-green); }
+.icon-btn.danger { color: var(--tl-red); }
+.icon-btn.danger:hover { background: rgba(255,0,0,0.06); }
+
 thead th:nth-child(4) {
     text-align: center;
     width: 160px;
