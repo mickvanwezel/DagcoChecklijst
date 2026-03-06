@@ -109,88 +109,6 @@ require 'Required/PHP.php';
                             endif;
                         endforeach;
                         ?>
-                    <?php elseif ($herhaling === 'wekelijks'): ?>
-                        <?php
-                        $weekdays = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
-                        $labels = [
-                            'start' => 'Start van de dag',
-                            'door' => 'Door de dag heen',
-                            'eind' => 'Eind van de dag'
-                        ];
-
-                        // build nested groups: weekday -> category -> rows
-                        $groups = [];
-                        foreach ($weekdays as $wd) {
-                            $groups[$wd] = ['start' => [], 'door' => [], 'eind' => []];
-                        }
-                        $other = ['start' => [], 'door' => [], 'eind' => []];
-                        foreach ($rows as $r) {
-                            $wd = $r['weekdag'] ?? '';
-                            $cat = $r['categorie'] ?? 'door';
-                            if ($wd && isset($groups[$wd])) {
-                                $groups[$wd][$cat][] = $r;
-                            } else {
-                                $other[$cat][] = $r;
-                            }
-                        }
-
-                        foreach ($weekdays as $wd):
-                            echo '<tr class="group"><td colspan="4">' . htmlspecialchars(ucfirst($wd)) . '</td></tr>';
-                            // for each category under this weekday
-                            foreach (['start', 'door', 'eind'] as $cat):
-                                echo '<tr class="group"><td colspan="4" style="font-weight:600; padding-left:18px">' . htmlspecialchars($labels[$cat]) . '</td></tr>';
-                                if (empty($groups[$wd][$cat])):
-                                    echo '<tr class="empty-cat"><td colspan="4" style="padding:10px 16px;color:var(--tl-text-muted)">Geen taken meer in deze categorie.</td></tr>';
-                                else:
-                                    foreach ($groups[$wd][$cat] as $row):
-                        ?>
-
-                                        <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>" data-categorie="<?= htmlspecialchars($row['categorie'] ?? 'door') ?>" data-weekdag="<?= htmlspecialchars($row['weekdag'] ?? '') ?>">
-
-                                            <td class="checkbox-cell">
-                                                <form method="POST" class="complete-form">
-                                                    <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
-                                                    <input type="hidden" name="checked" value="1" class="checked-input">
-                                                    <label class="checkbox-container">
-                                                        <input type="checkbox" class="complete-checkbox">
-                                                        <span class="checkmark"></span>
-                                                    </label>
-                                                </form>
-                                            </td>
-
-                                            <td data-label="Taak">
-                                                <?= htmlspecialchars($row['taak']) ?>
-                                            </td>
-
-                                            <td data-label="Beschrijving">
-                                                <?= htmlspecialchars($row['beschrijving']) ?>
-                                            </td>
-
-                                        </tr>
-
-                        <?php endforeach;
-                                endif;
-                            endforeach;
-                        endforeach;
-
-                        // render any tasks without a weekday at the end
-                        if (array_sum(array_map('count', $other)) > 0) {
-                            echo '<tr class="group"><td colspan="4">Ongecategoriseerde dagen</td></tr>';
-                            foreach (['start', 'door', 'eind'] as $cat):
-                                if (empty($other[$cat])) {
-                                    echo '<tr class="empty-cat"><td colspan="4" style="padding:10px 16px;color:var(--tl-text-muted)">Geen taken meer in deze categorie.</td></tr>';
-                                } else {
-                                    foreach ($other[$cat] as $row) {
-                                        echo '<tr data-herhaling="' . htmlspecialchars($herhaling) . '" data-categorie="' . htmlspecialchars($row['categorie'] ?? 'door') . '">';
-                                        echo '<td class="checkbox-cell"><form method="POST" class="complete-form"><input type="hidden" name="complete_id" value="' . $row['id'] . '"><input type="hidden" name="checked" value="1" class="checked-input"><label class="checkbox-container"><input type="checkbox" class="complete-checkbox"><span class="checkmark"></span></label></form></td>';
-                                        echo '<td data-label="Taak">' . htmlspecialchars($row['taak']) . '</td>';
-                                        echo '<td data-label="Beschrijving">' . htmlspecialchars($row['beschrijving']) . '</td>';
-                                        echo '</tr>';
-                                    }
-                                }
-                            endforeach;
-                        }
-                        ?>
                     <?php else: ?>
                         <?php if (empty($rows)): ?>
                             <tr class="empty-cat">
@@ -240,18 +158,6 @@ require 'Required/PHP.php';
                     <option value="wekelijks">Wekelijks</option>
                     <option value="maandelijks">Maandelijks</option>
                 </select>
-
-                <div id="modal-weekdag-group" style="display:none;">
-                    <label for="modal-weekdag">Weekdag</label>
-                    <select id="modal-weekdag" name="weekdag">
-                        <option value="maandag">Maandag</option>
-                        <option value="dinsdag">Dinsdag</option>
-                        <option value="woensdag">Woensdag</option>
-                        <option value="donderdag">Donderdag</option>
-                        <option value="vrijdag">Vrijdag</option>
-
-                    </select>
-                </div>
 
                 <div id="modal-categorie-group">
                     <label for="modal-categorie">Categorie</label>
