@@ -59,10 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modal-herhaling').value = 'dagelijks';
             var catEl = document.getElementById('modal-categorie');
             var catGroup = document.getElementById('modal-categorie-group');
-            var wdEl = document.getElementById('modal-weekdag');
-            var wdGroup = document.getElementById('modal-weekdag-group');
             if (catEl && catGroup) { catEl.value = 'door'; catEl.disabled = false; catGroup.style.display = ''; }
-            if (wdEl && wdGroup) { wdEl.value = ''; wdGroup.style.display = 'none'; wdEl.disabled = true; }
         } else if (mode === 'edit') {
             modalTitle.textContent = 'Taak bewerken';
             document.getElementById('modal-id').value = data.id || '';
@@ -72,27 +69,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modal-herhaling').value = data.herhaling || '<?= htmlspecialchars($herhaling) ?>';
             var catEl2 = document.getElementById('modal-categorie');
             var catGroup2 = document.getElementById('modal-categorie-group');
-            var wdEl2 = document.getElementById('modal-weekdag');
-            var wdGroup2 = document.getElementById('modal-weekdag-group');
             if (catEl2 && catGroup2) {
                 if (data.categorie) catEl2.value = data.categorie;
-                // categories only apply to 'dagelijks' tasks — hide for others
                 if ((data.herhaling || '') !== 'dagelijks') {
                     catGroup2.style.display = 'none';
                     catEl2.disabled = true;
                 } else {
                     catGroup2.style.display = '';
-                    catEl2.disabled = true; // keep immutable on edit
-                }
-            }
-            if (wdEl2 && wdGroup2) {
-                if (data.weekdag) wdEl2.value = data.weekdag;
-                if ((data.herhaling || '') === 'wekelijks') {
-                    wdGroup2.style.display = '';
-                    wdEl2.disabled = false;
-                } else {
-                    wdGroup2.style.display = 'none';
-                    wdEl2.disabled = true;
+                    catEl2.disabled = true;
                 }
             }
         }

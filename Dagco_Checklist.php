@@ -111,7 +111,7 @@ require 'Required/PHP.php';
                         ?>
                     <?php elseif ($herhaling === 'wekelijks'): ?>
                         <?php
-                        $weekdays = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag'];
+                        $weekdays = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
                         $labels = [
                             'start' => 'Start van de dag',
                             'door' => 'Door de dag heen',
@@ -249,6 +249,7 @@ require 'Required/PHP.php';
                         <option value="woensdag">Woensdag</option>
                         <option value="donderdag">Donderdag</option>
                         <option value="vrijdag">Vrijdag</option>
+
                     </select>
                 </div>
 

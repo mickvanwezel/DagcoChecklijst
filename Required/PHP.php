@@ -26,9 +26,8 @@ if (isset($_POST['action'])) {
         $beschrijving = $_POST['beschrijving'] ?? '';
         $herhaling = $_POST['herhaling'] ?? 'dagelijks';
         $categorie = $_POST['categorie'] ?? 'door';
-        $weekdag = $_POST['weekdag'] ?? null;
-        $stmt = $pdo->prepare("INSERT INTO dagco_checklist (taak, beschrijving, herhaling, categorie, weekdag) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$taak, $beschrijving, $herhaling, $categorie, $weekdag]);
+        $stmt = $pdo->prepare("INSERT INTO dagco_checklist (taak, beschrijving, herhaling, categorie) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$taak, $beschrijving, $herhaling, $categorie]);
         echo json_encode(['ok' => true, 'id' => $pdo->lastInsertId()]);
         exit;
     }
@@ -38,18 +37,10 @@ if (isset($_POST['action'])) {
         $taak = $_POST['taak'] ?? '';
         $beschrijving = $_POST['beschrijving'] ?? '';
         $herhaling = $_POST['herhaling'] ?? 'dagelijks';
-        $weekdag = $_POST['weekdag'] ?? null;
-        if (isset($_POST['categorie']) && isset($_POST['weekdag'])) {
-            $categorie = $_POST['categorie'] ?? 'door';
-            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, categorie = ?, weekdag = ? WHERE id = ?");
-            $stmt->execute([$taak, $beschrijving, $herhaling, $categorie, $weekdag, $id]);
-        } elseif (isset($_POST['categorie'])) {
+        if (isset($_POST['categorie'])) {
             $categorie = $_POST['categorie'] ?? 'door';
             $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, categorie = ? WHERE id = ?");
             $stmt->execute([$taak, $beschrijving, $herhaling, $categorie, $id]);
-        } elseif (isset($_POST['weekdag'])) {
-            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, weekdag = ? WHERE id = ?");
-            $stmt->execute([$taak, $beschrijving, $herhaling, $weekdag, $id]);
         } else {
             $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ? WHERE id = ?");
             $stmt->execute([$taak, $beschrijving, $herhaling, $id]);
@@ -123,22 +114,16 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
 }
 $last_reset = get_last_reset($herhaling, $now, $tz);
 
-$orderClause = "ORDER BY FIELD(t.categorie,'start','door','eind'), t.taak ASC";
-if ($herhaling === 'wekelijks') {
-    $orderClause = "ORDER BY FIELD(t.weekdag,'maandag','dinsdag','woensdag','donderdag','vrijdag'), FIELD(t.categorie,'start','door','eind'), t.taak ASC";
-}
-
 $sql = "
     SELECT 
         t.id,
         t.taak, 
         t.beschrijving, 
         t.last_completed,
-        t.categorie,
-        t.weekdag
+        t.categorie
     FROM dagco_checklist t
     WHERE t.herhaling = :herhaling
-    " . $orderClause . "
+    ORDER BY FIELD(t.categorie,'start','door','eind'), t.taak ASC
 ";
 
 $stmt = $pdo->prepare($sql);
@@ -160,3 +145,41 @@ foreach ($rows as $row) {
     if (!$completed) $visible[] = $row;
 }
 $rows = $visible;
+
+/**
+ * Fetch 'bijzonderheden' records and group them by day name (Dutch).
+ *
+ * Expected DB table: `bijzonderheden` with at least a `dag` column (e.g. 'Maandag')
+ * and any other columns you want to store (e.g. `titel`, `tekst`, `id`).
+ * The function is resilient if you add columns later.
+ *
+ * Returns an associative array with keys: 'maandag','dinsdag','woensdag',
+ * 'donderdag','vrijdag','zaterdag','zondag' — each value is an array of rows.
+ */
+function getBijzonderheden(PDO $pdo): array
+{
+    $days = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
+    $groups = array_fill_keys($days, []);
+
+    try {
+        $stmt = $pdo->query("SELECT * FROM bijzonderheden ORDER BY id ASC");
+        $items = $stmt->fetchAll();
+    } catch (Exception $e) {
+        // Table might not exist yet — return empty groups
+        return $groups;
+    }
+
+    foreach ($items as $it) {
+        // support either Dutch column name `dag` or `day`
+        $rawDay = $it['dag'] ?? ($it['day'] ?? '');
+        $key = mb_strtolower(trim((string)$rawDay));
+        if ($key === '') continue;
+        if (!isset($groups[$key])) {
+            // unknown day — store under a fallback key
+            if (!isset($groups[$key])) $groups[$key] = [];
+        }
+        $groups[$key][] = $it;
+    }
+
+    return $groups;
+}
