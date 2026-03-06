@@ -54,14 +54,15 @@ document.addEventListener('DOMContentLoaded', function () {
             modalTitle.textContent = 'Taak toevoegen';
             document.getElementById('modal-id').value = '';
             document.getElementById('modal-taak').value = '';
-            // contenteditable div used for multi-line single-element input
             var md = document.getElementById('modal-beschrijving');
             if (md) md.innerText = '';
-            // default to dagelijks when creating a new taak
             document.getElementById('modal-herhaling').value = 'dagelijks';
             var catEl = document.getElementById('modal-categorie');
             var catGroup = document.getElementById('modal-categorie-group');
+            var wdEl = document.getElementById('modal-weekdag');
+            var wdGroup = document.getElementById('modal-weekdag-group');
             if (catEl && catGroup) { catEl.value = 'door'; catEl.disabled = false; catGroup.style.display = ''; }
+            if (wdEl && wdGroup) { wdEl.value = ''; wdGroup.style.display = 'none'; wdEl.disabled = true; }
         } else if (mode === 'edit') {
             modalTitle.textContent = 'Taak bewerken';
             document.getElementById('modal-id').value = data.id || '';
@@ -71,6 +72,8 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modal-herhaling').value = data.herhaling || '<?= htmlspecialchars($herhaling) ?>';
             var catEl2 = document.getElementById('modal-categorie');
             var catGroup2 = document.getElementById('modal-categorie-group');
+            var wdEl2 = document.getElementById('modal-weekdag');
+            var wdGroup2 = document.getElementById('modal-weekdag-group');
             if (catEl2 && catGroup2) {
                 if (data.categorie) catEl2.value = data.categorie;
                 // categories only apply to 'dagelijks' tasks — hide for others
@@ -80,6 +83,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     catGroup2.style.display = '';
                     catEl2.disabled = true; // keep immutable on edit
+                }
+            }
+            if (wdEl2 && wdGroup2) {
+                if (data.weekdag) wdEl2.value = data.weekdag;
+                if ((data.herhaling || '') === 'wekelijks') {
+                    wdGroup2.style.display = '';
+                    wdEl2.disabled = false;
+                } else {
+                    wdGroup2.style.display = 'none';
+                    wdEl2.disabled = true;
                 }
             }
         }
@@ -94,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('modal-cancel').addEventListener('click', closeModal);
 
-    // toggle categorie group visibility when herhaling changes
     var modalHerh = document.getElementById('modal-herhaling');
     if (modalHerh) {
         modalHerh.addEventListener('change', function () {
@@ -115,7 +127,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     modalForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        // copy contenteditable value into hidden input so FormData includes it
         var editable = document.getElementById('modal-beschrijving');
         var hidden = document.getElementById('modal-beschrijving-hidden');
         if (editable && hidden) hidden.value = editable.innerText.trim();
@@ -148,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function () {
         td.className = 'row-actions';
         var inner = document.createElement('div');
         inner.className = 'actions-inner';
-        // edit button (icon-only)
         var edit = document.createElement('button');
         edit.className = 'icon-btn edit';
         edit.title = 'Bewerk';
@@ -159,11 +169,15 @@ document.addEventListener('DOMContentLoaded', function () {
             var taak = tr.querySelector('td[data-label="Taak"]').innerText.trim();
             var beschrijving = tr.querySelector('td[data-label="Beschrijving"]').innerText.trim();
             var herh = tr.getAttribute('data-herhaling') || '<?= htmlspecialchars($herhaling) ?>';
+            var cat = tr.getAttribute('data-categorie') || '';
+            var wd = tr.getAttribute('data-weekdag') || '';
             openModal('edit', {
                 id: id,
                 taak: taak,
                 beschrijving: beschrijving,
-                herhaling: herh
+                herhaling: herh,
+                categorie: cat,
+                weekdag: wd
             });
         });
         // delete button (icon-only)
@@ -202,7 +216,6 @@ document.addEventListener('DOMContentLoaded', function () {
         tr.appendChild(td);
     });
 
-    // Ensure placeholder
     function createEmptyRow(message) {
         var tr = document.createElement('tr');
         tr.className = 'empty-cat';
@@ -216,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function ensurePlaceholders() {
-        // ensure each group header has an empty row when no tasks
         var groupHeaders = Array.from(document.querySelectorAll('tbody tr.group'));
         if (groupHeaders.length) {
             groupHeaders.forEach(function (hdr) {
@@ -238,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Non-grouped: if no rows with .checkbox-cell, show overall message
         var tbody = document.querySelector('tbody');
         if (!tbody) return;
         var taskRows = tbody.querySelectorAll('tr .checkbox-cell');
