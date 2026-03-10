@@ -162,6 +162,7 @@ body {
     border-radius: 8px;
     font-family: inherit;
     font-size: 14px;
+    margin-bottom: 16px; /* match other fields */
 }
 
 .modal-content select {
@@ -172,6 +173,7 @@ body {
     background: white;
     font-family: inherit;
     font-size: 14px;
+    margin-bottom: 16px;
 }
 
 /* contenteditable styled to look like a 3-line input (single element, not a textarea) */
@@ -187,6 +189,7 @@ body {
     font-size: 14px;
     white-space: pre-wrap;
     outline: none;
+    margin-bottom: 16px; /* keep spacing consistent */
 }
 .text-input-multiline:focus {
     outline: none;
@@ -198,14 +201,64 @@ body {
     color: var(--tl-text-muted);
 }
 
-/* ensure inputs and buttons inherit page font for consistent typography */
-.modal-content input,
-.modal-content textarea,
-.modal-content select,
-.modal-content button,
-.btn,
-button {
-    font-family: inherit;
+.modal-content input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--tl-purple);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    margin-right: 6px;
+    background: transparent;
+    transition: background 300ms ease, border-color 300ms ease;
+}
+
+.modal-content input[type="checkbox"]:checked {
+    background: var(--tl-green);
+    border-color: var(--tl-green);
+}
+
+.modal-content input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.modal-content #modal-weekdag-group {
+    /* keep spacing consistent with other fields */
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+/* inner container that holds the checkbox labels */
+.modal-content #modal-weekdag-group > div {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px; /* align with label spacing */
+}
+
+.modal-content #modal-weekdag-group label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* space between checkbox and text */
+    margin: 0;
+    cursor: pointer;
+    color: var(--tl-text-muted);
+    font-size: 14px;
+}
+
+/* make the whole label text dark when its checkbox is checked */
+.modal-content #modal-weekdag-group label:has(input[type="checkbox"]:checked) {
+    color: var(--tl-text);
+    font-weight: 600;
 }
 
 .modal-actions {
