@@ -120,34 +120,56 @@ function get_last_reset(string $type, DateTime $now, DateTimeZone $tz): DateTime
 }
 $last_reset = get_last_reset($herhaling, $now, $tz);
 
-$sql = "
-    SELECT 
-        t.id,
-        t.taak, 
-        t.beschrijving, 
-        t.last_completed,
-        t.categorie,
-        t.weekdag
-    FROM dagco_checklist t
-    WHERE t.herhaling = :herhaling
-    ORDER BY FIELD(t.categorie,'start','door','eind'), t.taak ASC
-";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute(['herhaling' => $herhaling]);
-$rows = $stmt->fetchAll();
-
-$visible = [];
 $days_nl = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
 $current_day = (int)$now->format('N') - 1; // 0=maandag
 $current_day_name = $days_nl[$current_day];
 
+// If viewing daily, include both 'dagelijks' and 'wekelijks' tasks so weekly tasks
+// with matching weekdays can also appear in the daily view.
+if ($herhaling === 'dagelijks') {
+    $sql = "
+        SELECT
+            t.id,
+            t.taak,
+            t.beschrijving,
+            t.last_completed,
+            t.categorie,
+            t.weekdag,
+            t.herhaling
+        FROM dagco_checklist t
+        WHERE t.herhaling IN ('dagelijks','wekelijks')
+        ORDER BY FIELD(t.categorie,'start','door','eind'), t.taak ASC
+    ";
+    $stmt = $pdo->query($sql);
+    $rows = $stmt->fetchAll();
+} else {
+    $sql = "
+        SELECT
+            t.id,
+            t.taak,
+            t.beschrijving,
+            t.last_completed,
+            t.categorie,
+            t.weekdag,
+            t.herhaling
+        FROM dagco_checklist t
+        WHERE t.herhaling = :herhaling
+        ORDER BY FIELD(t.categorie,'start','door','eind'), t.taak ASC
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['herhaling' => $herhaling]);
+    $rows = $stmt->fetchAll();
+}
+
+$visible = [];
 foreach ($rows as $row) {
+    // determine completion relative to this task's own reset window
+    $task_reset = get_last_reset($row['herhaling'], $now, $tz);
     $completed = false;
     if (!empty($row['last_completed'])) {
         try {
             $lc = new DateTime($row['last_completed'], $tz);
-            if ($lc >= $last_reset) {
+            if ($lc >= $task_reset) {
                 $completed = true;
             }
         } catch (Exception $e) {
@@ -155,16 +177,16 @@ foreach ($rows as $row) {
     }
     if ($completed) continue;
 
-    // Filter by day for daily tasks
-    if ($herhaling === 'dagelijks') {
+    // When viewing the daily list, include weekly tasks only if they match today's weekday
+    if ($herhaling === 'dagelijks' && $row['herhaling'] === 'wekelijks') {
         $weekdag = $row['weekdag'];
         if ($weekdag) {
-            $selected_days = json_decode($weekdag, true);
+            $selected_days = json_decode($weekdag, true) ?: [];
             if (!in_array($current_day_name, $selected_days)) continue;
         }
-        // If no weekdag, show always
+        // if no weekdag set for a weekly task, treat as 'all days' and show
     }
-    // For weekly, show all
+
     $visible[] = $row;
 }
 $rows = $visible;
