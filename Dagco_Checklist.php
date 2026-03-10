@@ -30,31 +30,37 @@ require 'Required/PHP.php';
 
     <section class="checklist">
 
-        <h2><?= ucfirst($herhaling) ?> Taken</h2>
+        <h2><?php echo ucfirst($herhaling) ?> Taken</h2>
 
         <div style="text-align:center; margin-bottom:14px;">
             <button id="add-task" class="btn">+ Taak toevoegen</button>
         </div>
 
         <div class="nav-tabs">
-            <a href="?type=dagelijks" class="<?= $herhaling == 'dagelijks' ? 'active' : '' ?>">Dagelijks</a>
-            <a href="?type=wekelijks" class="<?= $herhaling == 'wekelijks' ? 'active' : '' ?>">Wekelijks</a>
-            <a href="?type=maandelijks" class="<?= $herhaling == 'maandelijks' ? 'active' : '' ?>">Maandelijks</a>
+            <a href="?type=dagelijks" class="<?php echo $herhaling == 'dagelijks' ? 'active' : '' ?>">Dagelijks</a>
+            <a href="?type=wekelijks" class="<?php echo $herhaling == 'wekelijks' ? 'active' : '' ?>">Wekelijks</a>
+            <a href="?type=maandelijks" class="<?php echo $herhaling == 'maandelijks' ? 'active' : '' ?>">Maandelijks</a>
         </div>
 
         <div class="table-wrapper">
             <table>
                 <colgroup>
-                    <col>
-                    <col>
-                    <col>
-                    <col>
+                    <col style="width: 64px;">
+                    <col style="width: 30%;">
+                    <col style="width: auto;">
+                    <?php if ($herhaling === 'wekelijks'): ?>
+                        <col style="width: 120px;">
+                    <?php endif; ?>
+                    <col style="width: 160px;">
                 </colgroup>
                 <thead>
                     <tr>
                         <th></th>
                         <th>Taak</th>
                         <th>Beschrijving</th>
+                        <?php if ($herhaling === 'wekelijks'): ?>
+                            <th>Dagen</th>
+                        <?php endif; ?>
                         <th>Acties</th>
                     </tr>
                 </thead>
@@ -82,11 +88,11 @@ require 'Required/PHP.php';
                                 foreach ($groups[$cat] as $row):
                         ?>
 
-                                    <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>" data-categorie="<?= htmlspecialchars($row['categorie'] ?? 'door') ?>">
+                                    <tr data-herhaling="<?php echo htmlspecialchars($herhaling) ?>" data-categorie="<?php echo htmlspecialchars($row['categorie'] ?? 'door') ?>" data-weekdag="<?php echo htmlspecialchars($row['weekdag'] ?? '') ?>">
 
                                         <td class="checkbox-cell">
                                             <form method="POST" class="complete-form">
-                                                <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
+                                                <input type="hidden" name="complete_id" value="<?php echo $row['id'] ?>">
                                                 <input type="hidden" name="checked" value="1" class="checked-input">
                                                 <label class="checkbox-container">
                                                     <input type="checkbox" class="complete-checkbox">
@@ -96,11 +102,11 @@ require 'Required/PHP.php';
                                         </td>
 
                                         <td data-label="Taak">
-                                            <?= htmlspecialchars($row['taak']) ?>
+                                            <?php echo htmlspecialchars($row['taak']) ?>
                                         </td>
 
                                         <td data-label="Beschrijving">
-                                            <?= htmlspecialchars($row['beschrijving']) ?>
+                                            <?php echo htmlspecialchars($row['beschrijving']) ?>
                                         </td>
 
                                     </tr>
@@ -112,14 +118,14 @@ require 'Required/PHP.php';
                     <?php else: ?>
                         <?php if (empty($rows)): ?>
                             <tr class="empty-cat">
-                                <td colspan="4" style="padding:10px 16px;color:var(--tl-text-muted)">Alle taken voltooid voor deze periode.</td>
+                                <td colspan="<?php echo $herhaling === 'wekelijks' ? 5 : 4 ?>" style="padding:10px 16px;color:var(--tl-text-muted)">Alle taken voltooid voor deze periode.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($rows as $row): ?>
-                                <tr data-herhaling="<?= htmlspecialchars($herhaling) ?>">
+                                <tr data-herhaling="<?php echo htmlspecialchars($herhaling) ?>" data-weekdag="<?php echo htmlspecialchars($row['weekdag'] ?? '') ?>">
                                     <td class="checkbox-cell">
                                         <form method="POST" class="complete-form">
-                                            <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
+                                            <input type="hidden" name="complete_id" value="<?php echo $row['id'] ?>">
                                             <input type="hidden" name="checked" value="1" class="checked-input">
                                             <label class="checkbox-container">
                                                 <input type="checkbox" class="complete-checkbox">
@@ -127,8 +133,21 @@ require 'Required/PHP.php';
                                             </label>
                                         </form>
                                     </td>
-                                    <td data-label="Taak"><?= htmlspecialchars($row['taak']) ?></td>
-                                    <td data-label="Beschrijving"><?= htmlspecialchars($row['beschrijving']) ?></td>
+                                    <td data-label="Taak"><?php echo htmlspecialchars($row['taak']) ?></td>
+                                    <td data-label="Beschrijving"><?php echo htmlspecialchars($row['beschrijving']) ?></td>
+                                    <?php if ($herhaling === 'wekelijks'): ?>
+                                        <td data-label="Dagen">
+                                            <?php
+                                            $weekdag = $row['weekdag'];
+                                            if ($weekdag) {
+                                                $days = json_decode($weekdag, true);
+                                                echo htmlspecialchars(implode(', ', $days));
+                                            } else {
+                                                echo 'Alle dagen';
+                                            }
+                                            ?>
+                                        </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -166,6 +185,17 @@ require 'Required/PHP.php';
                         <option value="door">Door de dag heen</option>
                         <option value="eind">Eind van de dag</option>
                     </select>
+                </div>
+
+                <div id="modal-weekdag-group" style="display: none;">
+                    <label>Dagen van de week</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <label><input type="checkbox" name="weekdag[]" value="maandag"> Maandag</label>
+                        <label><input type="checkbox" name="weekdag[]" value="dinsdag"> Dinsdag</label>
+                        <label><input type="checkbox" name="weekdag[]" value="woensdag"> Woensdag</label>
+                        <label><input type="checkbox" name="weekdag[]" value="donderdag"> Donderdag</label>
+                        <label><input type="checkbox" name="weekdag[]" value="vrijdag"> Vrijdag</label>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="modal-cancel" class="btn btn-secondary">Annuleren</button>

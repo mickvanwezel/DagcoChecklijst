@@ -15,6 +15,10 @@ try {
     if (!$colCheck) {
         $pdo->exec("ALTER TABLE dagco_checklist ADD COLUMN last_completed DATETIME NULL DEFAULT NULL");
     }
+    $colCheck2 = $pdo->query("SHOW COLUMNS FROM dagco_checklist LIKE 'weekdag'")->fetch();
+    if (!$colCheck2) {
+        $pdo->exec("ALTER TABLE dagco_checklist ADD COLUMN weekdag TEXT NULL DEFAULT NULL");
+    }
 } catch (Exception $e) {
 }
 
@@ -26,8 +30,9 @@ if (isset($_POST['action'])) {
         $beschrijving = $_POST['beschrijving'] ?? '';
         $herhaling = $_POST['herhaling'] ?? 'dagelijks';
         $categorie = $_POST['categorie'] ?? 'door';
-        $stmt = $pdo->prepare("INSERT INTO dagco_checklist (taak, beschrijving, herhaling, categorie) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$taak, $beschrijving, $herhaling, $categorie]);
+        $weekdag = isset($_POST['weekdag']) && is_array($_POST['weekdag']) ? json_encode($_POST['weekdag']) : null;
+        $stmt = $pdo->prepare("INSERT INTO dagco_checklist (taak, beschrijving, herhaling, categorie, weekdag) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$taak, $beschrijving, $herhaling, $categorie, $weekdag]);
         echo json_encode(['ok' => true, 'id' => $pdo->lastInsertId()]);
         exit;
     }
@@ -37,13 +42,14 @@ if (isset($_POST['action'])) {
         $taak = $_POST['taak'] ?? '';
         $beschrijving = $_POST['beschrijving'] ?? '';
         $herhaling = $_POST['herhaling'] ?? 'dagelijks';
+        $weekdag = isset($_POST['weekdag']) && is_array($_POST['weekdag']) ? json_encode($_POST['weekdag']) : null;
         if (isset($_POST['categorie'])) {
             $categorie = $_POST['categorie'] ?? 'door';
-            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, categorie = ? WHERE id = ?");
-            $stmt->execute([$taak, $beschrijving, $herhaling, $categorie, $id]);
+            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, categorie = ?, weekdag = ? WHERE id = ?");
+            $stmt->execute([$taak, $beschrijving, $herhaling, $categorie, $weekdag, $id]);
         } else {
-            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ? WHERE id = ?");
-            $stmt->execute([$taak, $beschrijving, $herhaling, $id]);
+            $stmt = $pdo->prepare("UPDATE dagco_checklist SET taak = ?, beschrijving = ?, herhaling = ?, weekdag = ? WHERE id = ?");
+            $stmt->execute([$taak, $beschrijving, $herhaling, $weekdag, $id]);
         }
         echo json_encode(['ok' => true]);
         exit;
@@ -120,7 +126,8 @@ $sql = "
         t.taak, 
         t.beschrijving, 
         t.last_completed,
-        t.categorie
+        t.categorie,
+        t.weekdag
     FROM dagco_checklist t
     WHERE t.herhaling = :herhaling
     ORDER BY FIELD(t.categorie,'start','door','eind'), t.taak ASC
@@ -131,6 +138,10 @@ $stmt->execute(['herhaling' => $herhaling]);
 $rows = $stmt->fetchAll();
 
 $visible = [];
+$days_nl = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
+$current_day = (int)$now->format('N') - 1; // 0=maandag
+$current_day_name = $days_nl[$current_day];
+
 foreach ($rows as $row) {
     $completed = false;
     if (!empty($row['last_completed'])) {
@@ -142,6 +153,18 @@ foreach ($rows as $row) {
         } catch (Exception $e) {
         }
     }
-    if (!$completed) $visible[] = $row;
+    if ($completed) continue;
+
+    // Filter by day for daily tasks
+    if ($herhaling === 'dagelijks') {
+        $weekdag = $row['weekdag'];
+        if ($weekdag) {
+            $selected_days = json_decode($weekdag, true);
+            if (!in_array($current_day_name, $selected_days)) continue;
+        }
+        // If no weekdag, show always
+    }
+    // For weekly, show all
+    $visible[] = $row;
 }
 $rows = $visible;
