@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var tr = document.createElement('tr');
         tr.className = 'empty-cat';
         var td = document.createElement('td');
-        var colspan = document.querySelector('thead th').parentNode.children.length;
+        var colspan = document.querySelectorAll('thead th').length || 4;
         td.setAttribute('colspan', colspan);
         td.style.padding = '10px 16px';
         td.style.color = getComputedStyle(document.documentElement).getPropertyValue('--tl-text-muted') || '#6B6B7A';
@@ -281,4 +281,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     ensurePlaceholders();
+
+    // Mobile detail removed: cards are not clickable on mobile anymore
 });
