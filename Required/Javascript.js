@@ -54,21 +54,17 @@ document.addEventListener('DOMContentLoaded', function () {
             modalTitle.textContent = 'Taak toevoegen';
             document.getElementById('modal-id').value = '';
             document.getElementById('modal-taak').value = '';
-            // contenteditable div used for multi-line single-element input
             var md = document.getElementById('modal-beschrijving');
             if (md) md.innerText = '';
-            // default to dagelijks when creating a new taak
             document.getElementById('modal-herhaling').value = 'dagelijks';
             var catEl = document.getElementById('modal-categorie');
             var catGroup = document.getElementById('modal-categorie-group');
             if (catEl && catGroup) { catEl.value = 'door'; catEl.disabled = false; catGroup.style.display = ''; }
-            // clear and disable weekdag checkboxes to avoid the glitch
             var weekdagGroup = document.getElementById('modal-weekdag-group');
             if (weekdagGroup) {
                 var checks = weekdagGroup.querySelectorAll('input[type="checkbox"]');
                 checks.forEach(function (chk) { chk.checked = false; chk.disabled = true; });
             }
-            // trigger the herhaling change handler to ensure consistent UI
             if (typeof modalHerh !== 'undefined' && modalHerh) modalHerh.dispatchEvent(new Event('change'));
         } else if (mode === 'edit') {
             modalTitle.textContent = 'Taak bewerken';
@@ -94,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
             }
-            // Trigger the change event to show/hide categorie group
             modalHerh.dispatchEvent(new Event('change'));
         }
     }
@@ -108,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('modal-cancel').addEventListener('click', closeModal);
 
-    // toggle categorie group visibility when herhaling changes
     var modalHerh = document.getElementById('modal-herhaling');
     if (modalHerh) {
         modalHerh.addEventListener('change', function () {
@@ -140,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     modalForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        // copy contenteditable value into hidden input so FormData includes it
         var editable = document.getElementById('modal-beschrijving');
         var hidden = document.getElementById('modal-beschrijving-hidden');
         if (editable && hidden) hidden.value = editable.innerText.trim();
@@ -173,7 +166,6 @@ document.addEventListener('DOMContentLoaded', function () {
         td.className = 'row-actions';
         var inner = document.createElement('div');
         inner.className = 'actions-inner';
-        // edit button (icon-only)
         var edit = document.createElement('button');
         edit.className = 'icon-btn edit';
         edit.title = 'Bewerk';
@@ -195,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 weekdag: weekdag
             });
         });
-        // delete button (icon-only)
         var del = document.createElement('button');
         del.className = 'icon-btn danger';
         del.title = 'Verwijder';
@@ -231,7 +222,6 @@ document.addEventListener('DOMContentLoaded', function () {
         tr.appendChild(td);
     });
 
-    // Ensure placeholder
     function createEmptyRow(message) {
         var tr = document.createElement('tr');
         tr.className = 'empty-cat';
@@ -246,7 +236,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function ensurePlaceholders() {
-        // ensure each group header has an empty row when no tasks
         var groupHeaders = Array.from(document.querySelectorAll('tbody tr.group'));
         if (groupHeaders.length) {
             groupHeaders.forEach(function (hdr) {
@@ -268,7 +257,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Non-grouped: if no rows with .checkbox-cell, show overall message
         var tbody = document.querySelector('tbody');
         if (!tbody) return;
         var taskRows = tbody.querySelectorAll('tr .checkbox-cell');
@@ -281,6 +269,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     ensurePlaceholders();
-
-    // Mobile detail removed: cards are not clickable on mobile anymore
 });

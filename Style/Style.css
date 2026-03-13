@@ -176,7 +176,6 @@ body {
     margin-bottom: 16px;
 }
 
-/* contenteditable styled to look like a 3-line input (single element, not a textarea) */
 .text-input-multiline {
     width: 100%;
     padding: 8px;
@@ -191,11 +190,11 @@ body {
     outline: none;
     margin-bottom: 16px;
 }
+
 .text-input-multiline:focus {
     outline: none;
 }
 
-/* placeholder support for contenteditable */
 .text-input-multiline[data-placeholder]:empty:before {
     content: attr(data-placeholder);
     color: var(--tl-text-muted);
@@ -232,30 +231,27 @@ body {
 }
 
 .modal-content #modal-weekdag-group {
-    /* keep spacing consistent with other fields */
     margin-top: 16px;
     margin-bottom: 16px;
 }
 
-/* inner container that holds the checkbox labels */
-.modal-content #modal-weekdag-group > div {
+.modal-content #modal-weekdag-group>div {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    margin-top: 4px; /* align with label spacing */
+    margin-top: 4px;
 }
 
 .modal-content #modal-weekdag-group label {
     display: inline-flex;
     align-items: center;
-    gap: 6px; /* space between checkbox and text */
+    gap: 6px;
     margin: 0;
     cursor: pointer;
     color: var(--tl-text-muted);
     font-size: 14px;
 }
 
-/* make the whole label text dark when its checkbox is checked */
 .modal-content #modal-weekdag-group label:has(input[type="checkbox"]:checked) {
     color: var(--tl-text);
     font-weight: 600;
@@ -453,7 +449,6 @@ tbody tr {
     height: 20px;
 }
 
-/* mobile detail icons */
 .mobile-detail-close svg,
 .mobile-detail-action svg {
     display: block;
@@ -524,7 +519,7 @@ tr.empty-cat td {
 
 @media (max-width: 768px) {
     .table-wrapper {
-        overflow-x: hidden; /* disable sliding on mobile */
+        overflow-x: hidden;
     }
 
     table {
@@ -542,7 +537,6 @@ tr.empty-cat td {
         width: 44px;
     }
 
-    /* Convert rows into cards on mobile */
     .table-wrapper thead {
         display: none;
     }
@@ -560,7 +554,7 @@ tr.empty-cat td {
         margin: 10px 12px;
         border-radius: 12px;
         padding: 12px;
-        box-shadow: 0 6px 18px rgba(75,35,84,0.06);
+        box-shadow: 0 6px 18px rgba(75, 35, 84, 0.06);
         border: 1px solid var(--tl-border);
     }
 
@@ -585,6 +579,8 @@ tr.empty-cat td {
         font-weight: 700;
         font-size: 16px;
         color: var(--tl-text);
+        text-align: center;
+        width: 100%;
     }
 
     .table-wrapper tbody tr td[data-label="Beschrijving"] {
@@ -593,14 +589,18 @@ tr.empty-cat td {
         color: var(--tl-text-muted);
         font-size: 14px;
         margin-left: 8px;
+        text-align: center;
+        width: 100%;
     }
 
     .table-wrapper tbody tr td[data-label="Dagen"] {
         order: 4;
         flex: 1 1 auto;
         font-size: 13px;
-        color: var(--tl-text-muted);
+        color: var(--tl-text);
         margin-left: 8px;
+        text-align: center;
+        width: 100%;
     }
 
     .row-actions {
@@ -609,6 +609,8 @@ tr.empty-cat td {
         margin-left: auto;
         align-self: flex-start;
         padding: 0;
+        margin-top: 12px;
+        width: 100%;
     }
 
     .row-actions .actions-inner {
@@ -618,14 +620,14 @@ tr.empty-cat td {
         padding: 0;
     }
 
-    /* keep the description visible on mobile so text can flow next to the title */
-    thead th:nth-child(3) { display: none; }
+    thead th:nth-child(3) {
+        display: none;
+    }
 
-    /* Mobile detail card (shown when tapping a row) */
     .mobile-detail-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.45);
+        background: rgba(0, 0, 0, 0.45);
         display: none;
         align-items: center;
         justify-content: center;
@@ -642,10 +644,10 @@ tr.empty-cat td {
         background: var(--tl-white);
         border-radius: 12px;
         padding: 16px;
-        box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
         transform: translateY(24px) scale(.98);
         opacity: 0;
-        transition: transform 320ms cubic-bezier(.2,.9,.3,1), opacity 220ms ease;
+        transition: transform 320ms cubic-bezier(.2, .9, .3, 1), opacity 220ms ease;
     }
 
     .mobile-detail-card.show {
@@ -696,11 +698,14 @@ tr.empty-cat td {
         justify-content: center;
     }
 
-    /* Slightly increase mobile detail card text sizes for readability */
-    .mobile-detail-card h4 { font-size: 20px; }
-    .mobile-detail-card p { font-size: 15px; }
+    .mobile-detail-card h4 {
+        font-size: 20px;
+    }
 
-    /* Mobile: make group headers full-width and visually distinct (not cards) */
+    .mobile-detail-card p {
+        font-size: 15px;
+    }
+
     .table-wrapper tbody tr.group {
         display: block;
         margin: 12px 12px 8px;
@@ -710,6 +715,7 @@ tr.empty-cat td {
         background: transparent;
         border: none;
         text-align: center;
+        width: 100%;
     }
 
     .table-wrapper tbody tr.group td {
@@ -720,9 +726,10 @@ tr.empty-cat td {
         font-size: 16px;
         background: transparent;
         border-bottom: none;
+        text-align: center;
+        width: 100%;
     }
 
-    /* Empty-state row: ensure normal wrapping and single-line formatting where possible */
     .table-wrapper tbody tr.empty-cat td {
         display: block;
         white-space: normal;
@@ -732,6 +739,8 @@ tr.empty-cat td {
         color: var(--tl-text-muted);
         background: transparent;
         border-bottom: none;
+        text-align: center;
+        width: 100%;
     }
 }
 

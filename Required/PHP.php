@@ -124,8 +124,6 @@ $days_nl = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'
 $current_day = (int)$now->format('N') - 1; // 0=maandag
 $current_day_name = $days_nl[$current_day];
 
-// If viewing daily, include both 'dagelijks' and 'wekelijks' tasks so weekly tasks
-// with matching weekdays can also appear in the daily view.
 if ($herhaling === 'dagelijks') {
     $sql = "
         SELECT
@@ -163,7 +161,6 @@ if ($herhaling === 'dagelijks') {
 
 $visible = [];
 foreach ($rows as $row) {
-    // determine completion relative to this task's own reset window
     $task_reset = get_last_reset($row['herhaling'], $now, $tz);
     $completed = false;
     if (!empty($row['last_completed'])) {
@@ -177,30 +174,18 @@ foreach ($rows as $row) {
     }
     if ($completed) continue;
 
-    // When viewing the daily list, include weekly tasks only if they match today's weekday
     if ($herhaling === 'dagelijks' && $row['herhaling'] === 'wekelijks') {
         $weekdag = $row['weekdag'];
         if ($weekdag) {
             $selected_days = json_decode($weekdag, true) ?: [];
             if (!in_array($current_day_name, $selected_days)) continue;
         }
-        // if no weekdag set for a weekly task, treat as 'all days' and show
     }
 
     $visible[] = $row;
 }
 $rows = $visible;
 
-/**
- * Fetch 'bijzonderheden' records and group them by day name (Dutch).
- *
- * Expected DB table: `bijzonderheden` with at least a `dag` column (e.g. 'Maandag')
- * and any other columns you want to store (e.g. `titel`, `tekst`, `id`).
- * The function is resilient if you add columns later.
- *
- * Returns an associative array with keys: 'maandag','dinsdag','woensdag',
- * 'donderdag','vrijdag','zaterdag','zondag' — each value is an array of rows.
- */
 function getBijzonderheden(PDO $pdo): array
 {
     $days = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
@@ -210,17 +195,14 @@ function getBijzonderheden(PDO $pdo): array
         $stmt = $pdo->query("SELECT * FROM bijzonderheden ORDER BY id ASC");
         $items = $stmt->fetchAll();
     } catch (Exception $e) {
-        // Table might not exist yet — return empty groups
         return $groups;
     }
 
     foreach ($items as $it) {
-        // support either Dutch column name `dag` or `day`
         $rawDay = $it['dag'] ?? ($it['day'] ?? '');
         $key = mb_strtolower(trim((string)$rawDay));
         if ($key === '') continue;
         if (!isset($groups[$key])) {
-            // unknown day — store under a fallback key
             if (!isset($groups[$key])) $groups[$key] = [];
         }
         $groups[$key][] = $it;
