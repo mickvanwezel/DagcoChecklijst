@@ -160,7 +160,20 @@ if ($herhaling === 'dagelijks') {
 }
 
 $visible = [];
+$total_tasks = 0;
+$completed_tasks = 0;
+
 foreach ($rows as $row) {
+    // Count for progress bar
+    if ($herhaling === 'dagelijks' && $row['herhaling'] === 'wekelijks') {
+        $weekdag = $row['weekdag'];
+        if ($weekdag) {
+            $selected_days = json_decode($weekdag, true) ?: [];
+            if (!in_array($current_day_name, $selected_days)) continue;
+        }
+    }
+    $total_tasks++;
+    
     $task_reset = get_last_reset($row['herhaling'], $now, $tz);
     $completed = false;
     if (!empty($row['last_completed'])) {
@@ -172,19 +185,16 @@ foreach ($rows as $row) {
         } catch (Exception $e) {
         }
     }
-    if ($completed) continue;
-
-    if ($herhaling === 'dagelijks' && $row['herhaling'] === 'wekelijks') {
-        $weekdag = $row['weekdag'];
-        if ($weekdag) {
-            $selected_days = json_decode($weekdag, true) ?: [];
-            if (!in_array($current_day_name, $selected_days)) continue;
-        }
+    if ($completed) {
+        $completed_tasks++;
+        continue;
     }
 
     $visible[] = $row;
 }
 $rows = $visible;
+
+$progress_percentage = $total_tasks > 0 ? round(($completed_tasks / $total_tasks) * 100) : 0;
 
 function getBijzonderheden(PDO $pdo): array
 {

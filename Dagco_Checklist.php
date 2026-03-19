@@ -28,6 +28,13 @@ require 'Required/PHP.php';
         <div class="hero-image"></div>
     </section>
 
+    <div class="progress-container" data-total-tasks="<?php echo $total_tasks ?>" data-completed-tasks="<?php echo $completed_tasks ?>">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: <?php echo $progress_percentage ?>%"></div>
+        </div>
+        <div class="progress-text"><?php echo $progress_percentage ?>% Voltooid</div>
+    </div>
+
     <section class="checklist">
 
         <h2><?php echo ucfirst($herhaling) ?> Taken</h2>

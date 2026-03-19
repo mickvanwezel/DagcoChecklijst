@@ -1,3 +1,34 @@
+function updateProgressBar() {
+    var container = document.querySelector('.progress-container');
+    var totalTasks = parseInt(container.getAttribute('data-total-tasks')) || 0;
+    var completedTasks = parseInt(container.getAttribute('data-completed-tasks')) || 0;
+    
+    var checkboxes = document.querySelectorAll('.complete-checkbox');
+    var visibleCheckedCount = 0;
+    checkboxes.forEach(function (cb) {
+        if (!cb.closest('tr').classList.contains('removing')) {
+            if (cb.checked) visibleCheckedCount++;
+        }
+    });
+    
+    var totalCompleted = completedTasks + visibleCheckedCount;
+    var percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+    
+    var progressFill = document.querySelector('.progress-fill');
+    var progressText = document.querySelector('.progress-text');
+    var progressStats = document.querySelector('.progress-stats');
+    
+    if (progressFill) {
+        progressFill.style.width = percentage + '%';
+    }
+    if (progressText) {
+        progressText.textContent = percentage + '% Voltooid';
+    }
+    if (progressStats) {
+        progressStats.textContent = totalCompleted + ' / ' + totalTasks + ' taken';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.complete-form').forEach(function (form) {
         var checkbox = form.querySelector('.complete-checkbox');
@@ -18,10 +49,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (res.ok) {
                     var tr = form.closest('tr');
                     if (checked === '1' && tr) {
+                        var container = document.querySelector('.progress-container');
+                        var currentCompleted = parseInt(container.getAttribute('data-completed-tasks')) || 0;
+                        container.setAttribute('data-completed-tasks', currentCompleted + 1);
+                        
                         tr.classList.add('removing');
                         var removed = function () {
                             if (tr && tr.parentNode) tr.parentNode.removeChild(tr);
                             ensurePlaceholders();
+                            updateProgressBar();
                         };
                         var onTransitionEnd = function (ev) {
                             if (ev.propertyName === 'opacity') {
@@ -32,7 +68,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         tr.addEventListener('transitionend', onTransitionEnd);
                         setTimeout(removed, 520);
                     }
-                    if (checked === '0') location.reload();
+                    if (checked === '0') {
+                        updateProgressBar();
+                    }
                 } else {
                     console.error('Completion request failed');
                 }
