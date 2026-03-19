@@ -2,30 +2,29 @@ function updateProgressBar() {
     var container = document.querySelector('.progress-container');
     var totalTasks = parseInt(container.getAttribute('data-total-tasks')) || 0;
     var completedTasks = parseInt(container.getAttribute('data-completed-tasks')) || 0;
-    
-    var checkboxes = document.querySelectorAll('.complete-checkbox');
+
+    // Count visible checkboxes
+    var visibleCheckboxes = document.querySelectorAll('tbody tr .complete-checkbox');
     var visibleCheckedCount = 0;
-    checkboxes.forEach(function (cb) {
-        if (!cb.closest('tr').classList.contains('removing')) {
-            if (cb.checked) visibleCheckedCount++;
-        }
+    visibleCheckboxes.forEach(function (cb) {
+        if (cb.checked) visibleCheckedCount++;
     });
-    
+
     var totalCompleted = completedTasks + visibleCheckedCount;
     var percentage = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-    
+
     var progressFill = document.querySelector('.progress-fill');
     var progressText = document.querySelector('.progress-text');
     var progressStats = document.querySelector('.progress-stats');
-    
+
     if (progressFill) {
         progressFill.style.width = percentage + '%';
     }
     if (progressText) {
-        progressText.textContent = percentage + '% Voltooid';
+        progressText.textContent = percentage + '%';
     }
     if (progressStats) {
-        progressStats.textContent = totalCompleted + ' / ' + totalTasks + ' taken';
+        progressStats.textContent = totalCompleted + ' / ' + totalTasks + ' taken voltooid';
     }
 }
 
@@ -52,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var container = document.querySelector('.progress-container');
                         var currentCompleted = parseInt(container.getAttribute('data-completed-tasks')) || 0;
                         container.setAttribute('data-completed-tasks', currentCompleted + 1);
-                        
+
                         tr.classList.add('removing');
                         var removed = function () {
                             if (tr && tr.parentNode) tr.parentNode.removeChild(tr);
