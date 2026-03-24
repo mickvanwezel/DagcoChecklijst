@@ -164,7 +164,6 @@ $total_tasks = 0;
 $completed_tasks = 0;
 
 foreach ($rows as $row) {
-    // Count for progress bar
     if ($herhaling === 'dagelijks' && $row['herhaling'] === 'wekelijks') {
         $weekdag = $row['weekdag'];
         if ($weekdag) {

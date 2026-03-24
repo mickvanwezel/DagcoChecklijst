@@ -2,8 +2,6 @@ function updateProgressBar() {
     var container = document.querySelector('.progress-container');
     var totalTasks = parseInt(container.getAttribute('data-total-tasks')) || 0;
     var completedTasks = parseInt(container.getAttribute('data-completed-tasks')) || 0;
-
-    // Count visible checkboxes
     var visibleCheckboxes = document.querySelectorAll('tbody tr .complete-checkbox');
     var visibleCheckedCount = 0;
     visibleCheckboxes.forEach(function (cb) {

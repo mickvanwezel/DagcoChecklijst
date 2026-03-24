@@ -26,15 +26,14 @@ require 'Required/PHP.php';
 
         </div>
         <div class="hero-image"></div>
-    </section>
-
-    <div class="progress-container" data-total-tasks="<?php echo $total_tasks ?>" data-completed-tasks="<?php echo $completed_tasks ?>">
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: <?php echo $progress_percentage ?>%"></div>
-            <div class="progress-text"><?php echo $progress_percentage ?>%</div>
+        <div class="progress-container" data-total-tasks="<?php echo $total_tasks ?>" data-completed-tasks="<?php echo $completed_tasks ?>">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: <?php echo $progress_percentage ?>%"></div>
+                <div class="progress-text"><?php echo $progress_percentage ?>%</div>
+            </div>
+            <div class="progress-stats"><?php echo $completed_tasks ?> / <?php echo $total_tasks ?> taken voltooid</div>
         </div>
-        <div class="progress-stats"><?php echo $completed_tasks ?> / <?php echo $total_tasks ?> taken voltooid</div>
-    </div>
+    </section>
 
     <section class="checklist">
 
